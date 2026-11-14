@@ -1225,7 +1225,7 @@ private fun QueueDetailScreen(
                     contentPadding = PaddingValues(
                         start = padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
                         end = padding.calculateRightPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-                        bottom = padding.calculateBottomPadding() + 88.dp,
+                        bottom = padding.calculateBottomPadding() + bottomPaddingDp,
                     ),
                     modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()),
                 ) {
@@ -1331,7 +1331,7 @@ private fun QueueDetailScreen(
                         .fillMaxHeight()
                         .padding(
                             top = padding.calculateTopPadding(),
-                            bottom = padding.calculateBottomPadding() + 88.dp,
+                            bottom = padding.calculateBottomPadding() + bottomPaddingDp,
                             end = padding.calculateRightPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
                         ),
                 )
