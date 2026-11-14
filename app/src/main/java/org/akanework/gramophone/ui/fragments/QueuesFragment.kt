@@ -513,7 +513,19 @@ class QueueDetailFragment : BaseFragment() {
     }
 }
 
-private data class DragRow(val key: Long, val encoded: String)
+internal data class DragRow(val key: Long, val encoded: String)
+
+/**
+ * Keeps each row's key across a repository refresh, matching rows by content in order, so list
+ * animations see a removal as a removal and an undo as an insertion. Only new rows get new keys.
+ */
+internal fun reuseRowKeys(old: List<DragRow>, new: List<String>, nextKey: () -> Long): List<DragRow> {
+    val available = old.groupByTo(HashMap(), { it.encoded }, { it.key })
+    return new.map { encoded ->
+        val keys = available[encoded]
+        DragRow(if (keys.isNullOrEmpty()) nextKey() else keys.removeAt(0), encoded)
+    }
+}
 
 private data class DetailPlayerState(
     val currentRow: Int? = null,
@@ -676,7 +688,7 @@ private fun QueueDetailScreen(
             }
         }
         if (displayRows.map { it.encoded } != repoRows) {
-            val newRows = repoRows.map { DragRow(rowKeySeed++, it) }
+            val newRows = reuseRowKeys(displayRows, repoRows) { rowKeySeed++ }
             displayRows = newRows
             if (isActive) {
                 val controller = activity.getPlayer()
@@ -1259,6 +1271,7 @@ private fun QueueDetailScreen(
                             item = decoded,
                             isDragging = isDragging,
                             dragTranslation = if (isDragging) dragState.dragOffset else 0f,
+                            modifier = if (isDragging) Modifier else Modifier.animateItem(),
                             isCurrent = isActive && currentPlayingKey == row.key,
                             isPlaying = isActive && playerState.isPlaying,
                             canPlayNext = QueueOrderEditor.canPlayNext(displayRows.size, anchor, index),

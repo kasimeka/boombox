@@ -18,9 +18,12 @@
 package org.akanework.gramophone.ui.components.compose
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
@@ -28,6 +31,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,11 +45,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,13 +60,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.common.MediaItem
@@ -109,6 +119,7 @@ fun QueueSongRow(
     onDragCancel: () -> Unit,
     highlighted: Boolean = false,
     onHighlightEnd: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
@@ -117,6 +128,7 @@ fun QueueSongRow(
     val currentOnDragEnd by rememberUpdatedState(onDragEnd)
     val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     val currentOnHighlightEnd by rememberUpdatedState(onHighlightEnd)
+    val currentOnRemoveFromQueue by rememberUpdatedState(onRemoveFromQueue)
     val highlightAlpha = remember { Animatable(0f) }
     LaunchedEffect(highlighted) {
         if (!highlighted) return@LaunchedEffect
@@ -125,45 +137,41 @@ fun QueueSongRow(
         highlightAlpha.animateTo(0f, tween(HIGHLIGHT_FADE_OUT_MS))
         currentOnHighlightEnd()
     }
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onRemoveFromQueue()
-            }
-            false
-        },
-    )
+    val swipeOffset = remember { Animatable(0f) }
 
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        enableDismissFromEndToStart = !isDragging,
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer { translationY = dragTranslation },
-        backgroundContent = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.errorContainer)
-                    .padding(horizontal = 24.dp),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Icon(
-                    Icons.Rounded.Delete,
-                    contentDescription = stringResource(R.string.remove_from_queue),
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
-        },
+            .graphicsLayer { translationY = dragTranslation }
+            .fillMaxWidth()
+            .height(72.dp)
+            .clipToBounds(),
     ) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(horizontal = 24.dp),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            Icon(
+                Icons.Rounded.Delete,
+                contentDescription = stringResource(R.string.remove_from_queue),
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+            )
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
+                .fillMaxSize()
+                .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
                 .background(MaterialTheme.colorScheme.surface)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = highlightAlpha.value))
+                .swipeToRemove(
+                    enabled = !isDragging,
+                    offset = swipeOffset,
+                    onRemove = { currentOnRemoveFromQueue() },
+                )
                 .pointerInput(Unit) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = { currentOnDragStart() },
@@ -309,6 +317,60 @@ fun QueueSongRow(
                         )
                     },
             )
+        }
+    }
+}
+
+private const val SWIPE_REMOVE_FRACTION = 0.3f
+private const val SWIPE_FLING_DP_PER_SEC = 800
+private const val SWIPE_SETTLE_MS = 180
+
+/**
+ * Swipes the row left to remove it, the way ItemTouchHelper does: the list keeps any gesture it
+ * has started scrolling, and a swipe only begins on a leftward drag that is clearly more
+ * horizontal than vertical. Past [SWIPE_REMOVE_FRACTION] of the width, or on a fast leftward
+ * fling, the row slides fully away to its red background and is removed; otherwise it springs back.
+ * Follows the swipe-to-dismiss sample in the Compose animation guide.
+ */
+private fun Modifier.swipeToRemove(
+    enabled: Boolean,
+    offset: Animatable<Float, AnimationVector1D>,
+    onRemove: () -> Unit,
+): Modifier = pointerInput(enabled) {
+    if (!enabled) return@pointerInput
+    coroutineScope {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val velocity = VelocityTracker()
+            var travelled = Offset.Zero
+            var claimed = false
+            while (true) {
+                val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                if (!change.pressed) break
+                if (!claimed) {
+                    // The list already took this gesture as a scroll.
+                    if (change.isConsumed) return@awaitEachGesture
+                    travelled += change.positionChange()
+                    if (travelled.getDistance() < viewConfiguration.touchSlop) continue
+                    claimed = travelled.x < 0 && abs(travelled.x) > 2 * abs(travelled.y)
+                    if (!claimed) return@awaitEachGesture
+                }
+                val dx = change.positionChange().x
+                change.consume()
+                velocity.addPosition(change.uptimeMillis, change.position)
+                launch { offset.snapTo((offset.value + dx).coerceAtMost(0f)) }
+            }
+            if (!claimed) return@awaitEachGesture
+            val width = size.width.toFloat()
+            val flung = velocity.calculateVelocity().x < -SWIPE_FLING_DP_PER_SEC.dp.toPx()
+            launch {
+                if (offset.value < -width * SWIPE_REMOVE_FRACTION || flung) {
+                    offset.animateTo(-width, tween(SWIPE_SETTLE_MS))
+                    onRemove()
+                } else {
+                    offset.animateTo(0f, tween(SWIPE_SETTLE_MS))
+                }
+            }
         }
     }
 }
