@@ -373,7 +373,6 @@
     <string name="settings_replaygain_no_rg_amp_desc">ReplayGain 태그가 없는 큰 음량의 곡은 음량을 낮춥니다</string>
     <string name="settings_stop_on_dismiss_summary">최근 앱에서 앱 작업을 닫으면 재생 중지</string>
     <string name="no_app_found">이 작업을 처리할 수 있는 앱을 찾을 수 없습니다</string>
-    <string name="settings_cookie_summary">앨범 커버를 쿠키 모양으로 표시</string>
     <string name="cannot_find_file">이 파일을 찾을 수 없습니다</string>
     <plurals name="folders_plural">
         <item quantity="other">%d개 폴더</item>
@@ -410,7 +409,6 @@
     <string name="contributors_yuyuko1024">물결 모양 진행 표시줄</string>
     <string name="contributors_banksio">Android Auto</string>
     <string name="contributors_saladnoober">품질 보증</string>
-    <string name="settings_cookie_info">쿠키 모양 커버</string>
     <string name="settings_pure_dark">다크 테마에서 완전한 검정색 사용</string>
     <string name="settings_stop_on_dismiss">최근 앱에서 닫을 때 재생 중지</string>
     <string name="compact_grid">격자(콤팩트)</string>

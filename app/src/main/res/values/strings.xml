@@ -1098,10 +1098,6 @@
     supported output formats by device and playback path of active playback. -->
     <!-- This is one of the possible audio formats supported by Android. It's used to display
     supported output formats by device and playback path of active playback. -->
-    <!-- Player UI toggle to enable animated shape similar to a cookie for album cover. Subtext -->
-    <string name="settings_cookie_summary">Make album cover cookie shaped</string>
-    <!-- Player UI toggle to enable animated shape similar to a cookie for album cover. Title -->
-    <string name="settings_cookie_info">Cookie cover</string>
     <!-- Appearance toggle to replace gray color with black in app UI. Title -->
     <string name="settings_pure_dark">Pure black in dark theme</string>
     <!-- Appearance toggle to replace gray color with black in app UI. Subtext -->

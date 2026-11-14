@@ -393,8 +393,6 @@
     <string name="home_menu_quick_refresh">Segarkan cepat</string>
     <string name="add_to_queue">Tambahkan ke antrean</string>
     <string name="disabled">Dinonaktifkan</string>
-    <string name="settings_cookie_summary">Jadikan sampul album berbentuk kue</string>
-    <string name="settings_cookie_info">Sampul kue</string>
     <string name="settings_pure_dark">Hitam pekat pada tema gelap</string>
     <string name="settings_pure_dark_summary">Tema di mana semua permukaan dalam aplikasi berwarna hitam murni (dapat menyebabkan black crush pada layar OLED)</string>
     <string name="settings_stop_on_dismiss">Hentikan saat ditutup</string>

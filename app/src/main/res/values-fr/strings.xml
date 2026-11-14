@@ -406,8 +406,6 @@
     <string name="home_menu_quick_refresh">Actualisation rapide</string>
     <string name="add_to_queue">Ajouter à la file d’attente</string>
     <string name="disabled">Désactivé</string>
-    <string name="settings_cookie_summary">Donner à la pochette d’album une forme de cookie</string>
-    <string name="settings_cookie_info">Pochette en forme de cookie</string>
     <string name="settings_pure_dark">Noir pur avec le thème sombre</string>
     <string name="settings_pure_dark_summary">Un thème dans lequel toutes les surfaces de l’application sont d’un noir pur (peut entraîner un écrasement des noirs sur les écrans OLED)</string>
     <string name="settings_stop_on_dismiss">Arrêter à la fermeture</string>

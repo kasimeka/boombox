@@ -49,6 +49,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.SeekBar
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -262,7 +263,7 @@ class FullBottomSheet
                 }
             }
         }
-    private val bottomSheetFullCover: TransformableImageView
+    private val bottomSheetFullCover: ImageView
     private val bottomSheetFullTitle: TextView
     private val bottomSheetFullSubtitle: TextView
     private val bottomSheetFullControllerButton: MaterialButton
@@ -805,9 +806,6 @@ class FullBottomSheet
                 "album_round_corner",
                 context.resources.getInteger(R.integer.round_corner_radius)
             ).dpToPx(context).toFloat()
-        }
-        if (key == null || key == "cookie_cover") {
-            bottomSheetFullCover.setClip(prefs.getBooleanStrict("cookie_cover", false))
         }
     }
 
@@ -1670,7 +1668,6 @@ class FullBottomSheet
                 runnableRunning = true
                 handler.postDelayed(positionRunnable, SLIDER_UPDATE_INTERVAL)
             }
-            bottomSheetFullCover.startRotation()
         } else if (playbackState != Player.STATE_BUFFERING) {
             if (bottomSheetFullControllerButton.getTag(R.id.play_next) as Int? != 2) {
                 bottomSheetFullControllerButton.icon =
@@ -1683,7 +1680,6 @@ class FullBottomSheet
                 bottomSheetFullControllerButton.icon.startAnimation()
                 bottomSheetFullControllerButton.background.startAnimation()
                 bottomSheetFullControllerButton.setTag(R.id.play_next, 2)
-                bottomSheetFullCover.stopRotation()
             }
             if (!isUserTracking) {
                 progressDrawable.animate = false

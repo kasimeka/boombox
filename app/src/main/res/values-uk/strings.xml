@@ -400,8 +400,6 @@
         <item quantity="many">%d Папки</item>
         <item quantity="other">%d Папки</item>
     </plurals>
-    <string name="settings_cookie_summary">Зробіть обкладинку альбому у формі печива</string>
-    <string name="settings_cookie_info">Обкладинка для печива</string>
     <string name="settings_pure_dark_summary">Тема, де всі поверхні в додатку повністю чорні (може спричинити чорний ефект на OLED-дисплеях)</string>
     <string name="settings_stop_on_dismiss">Зупинити при закритті</string>
     <string name="settings_stop_on_dismiss_summary">Зупинити відтворення, коли завдання програми видалено з нещодавніх</string>

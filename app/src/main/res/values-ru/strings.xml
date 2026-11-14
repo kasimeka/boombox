@@ -407,8 +407,6 @@
         <item quantity="many">%d папок</item>
         <item quantity="other">%d папок</item>
     </plurals>
-    <string name="settings_cookie_summary">Делает обложку альбома в форме печенья</string>
-    <string name="settings_cookie_info">Обложка-печенье</string>
     <string name="compact_grid">Сетка (компактная)</string>
     <string name="sort_by_album_year">Год альбома</string>
     <string name="sort_by_album_artist_year"><![CDATA[Исполнитель альбома -&gt; Год]]></string>

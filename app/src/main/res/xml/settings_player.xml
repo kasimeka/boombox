@@ -76,15 +76,6 @@
             android:title="@string/settings_audio_quality_info"
             android:widgetLayout="@layout/preference_switch_widget" />
 
-        <SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:icon="@drawable/ic_cookie"
-            android:key="cookie_cover"
-            android:layout="@layout/preference_switch"
-            android:summary="@string/settings_cookie_summary"
-            android:title="@string/settings_cookie_info"
-            android:widgetLayout="@layout/preference_switch_widget" />
-
     </PreferenceCategory>
 
     <PreferenceCategory

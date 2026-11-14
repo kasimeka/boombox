@@ -392,8 +392,6 @@
     <string name="home_menu_quick_refresh">Atualização rápida</string>
     <string name="add_to_queue">Adicionar à fila</string>
     <string name="disabled">Desabilitado</string>
-    <string name="settings_cookie_summary">Capa do álbum em formato de cookie</string>
-    <string name="settings_cookie_info">Capa de cookie</string>
     <string name="settings_pure_dark_summary">Um tema onde todas as superfícies no app são puro preto (pode causar falhas em telas OLED)</string>
     <string name="settings_stop_on_dismiss">Pare ao dispensar</string>
     <string name="settings_stop_on_dismiss_summary">Pare a reprodução quando o app for dispensado dos aplicativos recentes</string>

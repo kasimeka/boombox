@@ -387,8 +387,6 @@
     <string name="disabled">Pole kasutusel</string>
     <string name="timer_expiry_eos">Unetaimer peatab esituse, kui lugude esitamine lõppeb %s</string>
     <string name="timer_expiry_end_of_this_song">Unetaimer peatab esituse selle loo esitamise lõppedes</string>
-    <string name="settings_cookie_summary">Näita albumite kaanepilte küpsisekujulistena</string>
-    <string name="settings_cookie_info">Küpsiselaadsed kaanepildid</string>
     <plurals name="folders_plural">
         <item quantity="one">%d kaust</item>
         <item quantity="other">%d kausta</item>

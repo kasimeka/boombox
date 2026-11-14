@@ -401,8 +401,6 @@
     <string name="home_menu_quick_refresh">ຣີເຟຣຊດ່ວນ</string>
     <string name="add_to_queue">ເພີ່ມເຂົ້າໃນຄິວ</string>
     <string name="disabled">ປິດການນຳໃຊ້</string>
-    <string name="settings_cookie_summary">ເຮັດໃຫ້ໜ້າປົກອະລະບ້ຳເປັນຮູບຊົງຄຸກກີ້</string>
-    <string name="settings_cookie_info">ໜ້າປົກຮູບຄຸກກີ້</string>
     <string name="settings_pure_dark">ສີດຳສະນິດໃນຮູບແບບສີມືດ</string>
     <string name="settings_pure_dark_summary">ຮູບແບບທີ່ທຸກພື້ນຜິວໃນແອັບເປັນສີດຳສະນິດ (ອາດເຮັດໃຫ້ເກີດບັນຫາສີດຳຈົມເທິງໜ້າຈໍ OLED)</string>
     <string name="settings_stop_on_dismiss">ຢຸດເມື່ອປັດແອັບຖິ້ມ</string>
