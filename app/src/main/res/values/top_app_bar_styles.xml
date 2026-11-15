@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The top app bar on every page. The base is shared by all of them; pages with a back arrow
+      extend it. Pinned and never scrolled with the title, except where the layout says otherwise.
+    -->
+    <style name="Widget.Gramophone.TopAppBar" parent="">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="navigationIconTint">?attr/colorOnSurface</item>
+        <item name="navigationContentDescription">@string/back</item>
+    </style>
+
+    <style name="Widget.Gramophone.TopAppBar.Back" parent="Widget.Gramophone.TopAppBar">
+        <item name="android:paddingStart">4dp</item>
+        <item name="navigationIcon">@drawable/ic_arrow_back</item>
+    </style>
+</resources>
