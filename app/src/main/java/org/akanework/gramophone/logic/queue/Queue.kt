@@ -164,7 +164,6 @@ data class Queue(
     val source: QueueSource?,
     override val rows: List<String>,
     val bookmark: QueueBookmark = QueueBookmark(),
-    val repeatMode: QueueRepeatMode = QueueRepeatMode.OFF,
     val createdAt: Long,
     override val updatedAt: Long = createdAt,
     val lastPlayedAt: Long? = null,

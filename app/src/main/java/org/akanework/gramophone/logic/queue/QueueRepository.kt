@@ -76,14 +76,12 @@ interface QueueRepository {
     ): Queue?
 
     /**
-     * Save the debounced playback bookmark and repeat mode without bumping the queue's
-     * [Queue.updatedAt]. Progress is not an edit; the bookmark and the player's repeat choice
-     * still persist.
+     * Save the debounced playback bookmark without bumping the queue's [Queue.updatedAt].
+     * Progress is not an edit.
      */
     suspend fun saveProgress(
         id: UUID,
         bookmark: QueueBookmark,
-        repeatMode: QueueRepeatMode? = null,
     ): Queue?
 
     /** Mark [id] as the last active queue, or clear the marker with null. */
@@ -215,12 +213,10 @@ class StoreQueueRepository(
     override suspend fun saveProgress(
         id: UUID,
         bookmark: QueueBookmark,
-        repeatMode: QueueRepeatMode?,
     ): Queue? = locked {
         val current = store.queue(id) ?: return@locked null
         val changed = current.copy(
             bookmark = bookmark.normalized(current.rows.size),
-            repeatMode = repeatMode ?: current.repeatMode,
         )
         if (changed != current) {
             store.update(changed)

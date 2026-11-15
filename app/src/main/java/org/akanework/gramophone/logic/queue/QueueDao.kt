@@ -171,7 +171,6 @@ class QueueDao(private val openDatabase: () -> SQLiteDatabase) : QueueStore {
         val id: UUID,
         val title: String,
         val source: QueueSource?,
-        val repeatMode: QueueRepeatMode,
         val bookmark: QueueBookmark,
         val createdAt: Long,
         val updatedAt: Long,
@@ -186,7 +185,6 @@ class QueueDao(private val openDatabase: () -> SQLiteDatabase) : QueueStore {
             source = source,
             rows = rows,
             bookmark = bookmark,
-            repeatMode = repeatMode,
             createdAt = createdAt,
             updatedAt = updatedAt,
             lastPlayedAt = lastPlayedAt,
@@ -208,9 +206,6 @@ class QueueDao(private val openDatabase: () -> SQLiteDatabase) : QueueStore {
                     displayName = getString(getColumnIndexOrThrow("source_display_name")),
                 )
             },
-            repeatMode = QueueRepeatMode.fromValue(
-                getInt(getColumnIndexOrThrow("repeat_mode"))
-            ),
             bookmark = QueueBookmark(
                 row = getInt(getColumnIndexOrThrow("bookmark_row")),
                 positionMs = getLong(getColumnIndexOrThrow("bookmark_position_ms")),
@@ -239,7 +234,6 @@ class QueueDao(private val openDatabase: () -> SQLiteDatabase) : QueueStore {
             putNull("source_identifier")
             putNull("source_display_name")
         }
-        put("repeat_mode", repeatMode.value)
         put("bookmark_row", bookmark.row)
         put("bookmark_position_ms", bookmark.positionMs)
         put("bookmark_ended", if (bookmark.ended) 1 else 0)
@@ -258,7 +252,6 @@ class QueueDao(private val openDatabase: () -> SQLiteDatabase) : QueueStore {
             "source_kind",
             "source_identifier",
             "source_display_name",
-            "repeat_mode",
             "bookmark_row",
             "bookmark_position_ms",
             "bookmark_ended",

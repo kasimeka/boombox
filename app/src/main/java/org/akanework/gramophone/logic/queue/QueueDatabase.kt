@@ -42,7 +42,6 @@ class QueueDatabase(
                 source_kind TEXT,
                 source_identifier TEXT,
                 source_display_name TEXT,
-                repeat_mode INTEGER NOT NULL DEFAULT 0,
                 bookmark_row INTEGER NOT NULL DEFAULT 0,
                 bookmark_position_ms INTEGER NOT NULL DEFAULT 0,
                 bookmark_ended INTEGER NOT NULL DEFAULT 0,

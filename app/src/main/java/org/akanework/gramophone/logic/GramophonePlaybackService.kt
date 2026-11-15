@@ -1023,7 +1023,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             queue = ArrayList(items),
             startIndex = row,
             startPositionMs = bookmark.positionMs,
-            repeatMode = queue.repeatMode.value,
+            repeatMode = endedWorkaroundPlayer?.repeatMode() ?: Player.REPEAT_MODE_OFF,
             ended = bookmark.ended,
         )
     }
@@ -1779,7 +1779,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                                 action.positionMs,
                                 queue.title,
                                 false,
-                                queue.repeatMode.value,
+                                null,
                                 null,
                             )
                             player.currentQueueId?.let { registerQueueId(it, queue.id) }
@@ -1979,7 +1979,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                             startPosition,
                             queue.title,
                             point?.ended ?: false,
-                            queue.repeatMode.value,
+                            null,
                             null
                         )
                         player.currentQueueId?.let { registerQueueId(it, queue.id) }

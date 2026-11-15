@@ -242,9 +242,8 @@ class ActiveQueuePersistence(
             ended = player.playbackState() == Player.STATE_ENDED,
             rowCount = count,
         )
-        val repeatMode = QueueRepeatMode.fromValue(player.repeatMode())
         val rows = withContext(Dispatchers.Default) { items.map(MediaRowCodec::encode) }
-        return Snapshot(rows = rows, bookmark = bookmark, repeatMode = repeatMode)
+        return Snapshot(rows = rows, bookmark = bookmark)
     }
 
     /**
@@ -270,7 +269,6 @@ class ActiveQueuePersistence(
                 it.copy(
                     rows = snapshot.rows,
                     bookmark = snapshot.bookmark,
-                    repeatMode = snapshot.repeatMode,
                     isModified = if (markModified) true else it.isModified,
                 )
             }?.also {
@@ -297,11 +295,10 @@ class ActiveQueuePersistence(
     }
 
     private suspend fun saveProgressLocked(id: UUID, snapshot: Snapshot): Queue? =
-        repository.saveProgress(id, snapshot.bookmark, snapshot.repeatMode)
+        repository.saveProgress(id, snapshot.bookmark)
 
     private data class Snapshot(
         val rows: List<String>,
         val bookmark: QueueBookmark,
-        val repeatMode: QueueRepeatMode,
     )
 }
