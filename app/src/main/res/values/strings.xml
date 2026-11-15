@@ -406,6 +406,14 @@
     <string name="remove_from_queue">Remove from queue</string>
     <!-- Snackbar confirmation after removing a song from the queue -->
     <string name="removed_from_queue">Removed from queue</string>
+    <!-- Header of the collapsible section above the queues that lists playlists -->
+    <string name="playlists">Playlists</string>
+    <!-- Queue detail menu item that writes the queue's songs to a new playlist -->
+    <string name="save_as_playlist">Save as playlist</string>
+    <!-- Toast after a queue was saved as a playlist -->
+    <string name="playlist_saved">Saved as playlist</string>
+    <!-- Toast when a queue could not be saved as a playlist -->
+    <string name="playlist_not_saved">Could not save playlist</string>
     <string name="queue_reordered">Queue reordered</string>
     <!-- Snackbar confirmation after reordering the queue -->
     <!-- Toast confirmation after shuffling the queue from the full player, which has no undo -->

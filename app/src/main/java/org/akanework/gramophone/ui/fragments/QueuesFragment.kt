@@ -17,7 +17,11 @@
 
 package org.akanework.gramophone.ui.fragments
 
+import org.akanework.gramophone.logic.queue.M3uImport
+import org.akanework.gramophone.logic.queue.PlaylistStore
 import org.akanework.gramophone.logic.queue.QueueDragReorder
+import org.akanework.gramophone.logic.queue.QueueExportRow
+import java.io.File
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -146,6 +150,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -267,6 +272,23 @@ private fun QueuesScreen(
         controller.play()
     }
 
+    var playlistFiles by remember { mutableStateOf<List<PlaylistStore.Playlist>>(emptyList()) }
+    val playlistRevision by PlaylistStore.revision.collectAsState()
+    LaunchedEffect(playlistRevision) {
+        playlistFiles = withContext(Dispatchers.IO) { PlaylistStore.list(activity) }
+    }
+    val playlistCollections = playlistFiles.map { playlist ->
+        PinnedQueueCollection(
+            id = "playlist_${playlist.file.name}",
+            title = playlist.title,
+            songCount = playlist.songCount,
+            iconRes = R.drawable.ic_playlist_play,
+            onClick = { playPlaylist(activity, scope, playlist.file, shuffle = false) },
+            onPlay = { playPlaylist(activity, scope, playlist.file, shuffle = false) },
+            onShuffle = { playPlaylist(activity, scope, playlist.file, shuffle = true) },
+        )
+    }
+
     val pinnedCollections = listOf(
         PinnedQueueCollection(
             id = "favourites",
@@ -340,7 +362,7 @@ private fun QueuesScreen(
                 )
             },
         ),
-    )
+    ) + playlistCollections
 
     DisposableEffect(lifecycleOwner) {
         activity.controllerViewModel.addRecreationalPlayerListener(
@@ -393,6 +415,45 @@ private fun QueuesScreen(
         )
     }
 
+}
+
+/** Plays a playlist's songs that are in the library, in file order or shuffled. */
+private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: File, shuffle: Boolean) {
+    scope.launch {
+        val songs = withContext(Dispatchers.IO) {
+            val songsByPath = activity.reader.songListFlow.first()
+                .associateBy { it.getFile()?.absolutePath }
+            M3uImport.resolve(PlaylistStore.entries(file)) { songsByPath[it] }.matches
+        }
+        if (songs.isEmpty()) return@launch
+        // prepare() and play() must run on the application thread, not on IO.
+        val controller = activity.getPlayer() ?: return@launch
+        controller.setMediaItemsWithTitle(
+            if (shuffle) songs.shuffled() else songs,
+            title = file.nameWithoutExtension,
+            original = !shuffle,
+        )
+        controller.prepare()
+        controller.play()
+    }
+}
+
+/**
+ * Writes the queue's songs as a playlist file and leaves the queue alone. Rows without a local
+ * file are left out. Returns false when no playlist was written.
+ */
+private fun savePlaylist(activity: MainActivity, queue: Queue): Boolean {
+    val rows = queue.rows.mapNotNull { encoded ->
+        val item = MediaRowCodec.decode(encoded) ?: return@mapNotNull null
+        val path = item.getFile()?.absolutePath ?: return@mapNotNull null
+        QueueExportRow(
+            path = path,
+            title = item.mediaMetadata.title?.toString(),
+            artist = item.mediaMetadata.artist?.toString(),
+        )
+    }
+    if (rows.isEmpty()) return false
+    return PlaylistStore.create(activity, queue.title, rows) != null
 }
 
 /** Opens the queue's detail without changing the active queue or starting playback. */
@@ -974,6 +1035,22 @@ private fun QueueDetailScreen(
                     onClick = {
                         actionsOpen = false
                         renameOpen = true
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.save_as_playlist)) },
+                    onClick = {
+                        actionsOpen = false
+                        scope.launch(Dispatchers.IO) {
+                            val saved = savePlaylist(activity, loadedQueue)
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    if (saved) R.string.playlist_saved else R.string.playlist_not_saved,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
+                        }
                     },
                 )
                 DropdownMenuItem(

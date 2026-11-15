@@ -61,6 +61,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -129,9 +132,9 @@ fun QueueListContent(
                 modifier = Modifier.align(Alignment.Center),
             )
         } else {
-            var pinnedExpanded by rememberSaveable { mutableStateOf(true) }
+            var pinnedExpanded by rememberSaveable { mutableStateOf(false) }
             val pinnedRowCount = if (pinnedExpanded) pinnedCollections.size else 0
-            val headerItemCount = if (pinnedCollections.isNotEmpty()) pinnedRowCount + 1 else 0
+            val headerItemCount = if (pinnedCollections.isNotEmpty()) pinnedRowCount + 2 else 0
             val scope = rememberCoroutineScope()
             var queueKeySeed by remember { mutableLongStateOf(0L) }
             var displayQueues by remember {
@@ -231,15 +234,21 @@ fun QueueListContent(
                     .nestedScroll(rememberNestedScrollInteropConnection()),
             ) {
                 if (pinnedCollections.isNotEmpty()) {
+                    item(key = "pinned_toggle") {
+                        PinnedSectionToggle(
+                            expanded = pinnedExpanded,
+                            onToggle = { pinnedExpanded = !pinnedExpanded },
+                        )
+                    }
                     if (pinnedExpanded) {
                         items(items = pinnedCollections, key = { "pinned_${it.id}" }) { collection ->
                             PinnedCollectionRow(item = collection)
                         }
                     }
                     item(key = "pinned_divider") {
-                        PinnedSectionToggle(
-                            expanded = pinnedExpanded,
-                            onToggle = { pinnedExpanded = !pinnedExpanded },
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                         )
                     }
                 }
@@ -357,13 +366,19 @@ private fun PinnedSectionToggle(expanded: Boolean, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics(mergeDescendants = true) {
+                heading()
+                stateDescription = if (expanded) "Expanded" else "Collapsed"
+            }
             .clickable(onClick = onToggle)
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        HorizontalDivider(
+        Text(
+            text = stringResource(R.string.playlists),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
         )
         Icon(
             painter = painterResource(R.drawable.ic_expand_more),
