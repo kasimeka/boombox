@@ -41,6 +41,8 @@ import java.io.File
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.MenuCompat
+import org.akanework.gramophone.logic.ui.UiExperiments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -261,13 +263,24 @@ class GeneralSubFragment : BaseFragment() {
         // Build FastScroller.
         recyclerView.fastScroll(songAdapter, songAdapter.itemHeightHelper)
 
-        if (itemType == R.id.playlist_file) {
+        val menuBar = rootView.findViewById<MaterialToolbar>(R.id.menuBar)
+        if (itemType != R.id.playlist_file) {
+            menuBar.visibility = View.GONE
+        } else {
             val playlistFile = File(bundle.getString("Path")!!)
-            topAppBar.overflowIcon =
+            menuBar.overflowIcon =
                 AppCompatResources.getDrawable(requireContext(), R.drawable.ic_more_vert_alt_topappbar)
-            topAppBar.inflateMenu(R.menu.playlist_menu)
-            topAppBar.setOnMenuItemClickListener { item ->
+            menuBar.inflateMenu(R.menu.playlist_menu)
+            MenuCompat.setGroupDividerEnabled(menuBar.menu, true)
+            menuBar.menu.findItem(R.id.huge_forehead)?.isChecked =
+                UiExperiments.hugeForehead(requireContext())
+            menuBar.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
+                    R.id.huge_forehead -> {
+                        val next = !item.isChecked
+                        item.isChecked = next
+                        UiExperiments.setHugeForehead(requireContext(), next)
+                    }
                     R.id.playlist_rename -> renamePlaylist(playlistFile)
                     R.id.playlist_delete -> deletePlaylist(playlistFile)
                 }
