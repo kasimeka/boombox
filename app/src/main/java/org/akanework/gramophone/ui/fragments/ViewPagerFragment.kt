@@ -423,6 +423,13 @@ class ViewPagerFragment : BaseFragment() {
         viewPager2.setCurrentItem(position, smoothScroll)
     }
 
+    /** Leaves the folder shown on the current tab, if there is one. Returns false otherwise. */
+    fun goUpFolder(): Boolean {
+        val page = childFragmentManager
+            .findFragmentByTag("f${adapter.getItemId(viewPager2.currentItem)}") as? AdapterFragment
+        return page?.goUpFolder() ?: false
+    }
+
     /** Whether back should swipe to Queues first: the Queues tab exists and is not selected. */
     fun canBackToQueuesTab(): Boolean {
         val position = queuesTabPosition() ?: return false

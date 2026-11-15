@@ -23,8 +23,6 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.TextView
-import androidx.activity.BackEventCompat
-import androidx.activity.OnBackPressedCallback
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -362,95 +360,13 @@ class DetailedFolderAdapter(
             })
             it.startAnimation(animation)
         }
-        fragment.requireActivity().onBackPressedDispatcher.addCallback(
-            fragment.viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
+    }
 
-                private var backProgress = 0f
-                private var committed = false
-
-                override fun handleOnBackStarted(backEvent: BackEventCompat) {
-                    backProgress = 0f
-                    committed = false
-                }
-
-                override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                    val rv = recyclerView ?: return
-                    val width = rv.width.toFloat()
-                    if (width <= 0f) return
-                    backProgress = backEvent.progress
-
-                    val direction = 1f
-                    rv.translationX = direction * backProgress * width * 0.3f
-                    rv.alpha = 1f - backProgress * 0.3f
-                }
-
-                override fun handleOnBackCancelled() {
-                    recyclerView?.animate()
-                        ?.translationX(0f)
-                        ?.alpha(1f)
-                        ?.setDuration(150)
-                        ?.start()
-                }
-
-                override fun handleOnBackPressed() {
-                    if (committed) return
-                    committed = true
-                    recyclerView.let {
-                        if (it == null) {
-                            doUpdate()
-                            return@let
-                        }
-                        if (!fileNodePath.value.isNullOrEmpty()) {
-                            val width = it.width.toFloat()
-                            val remainingFraction = 1f - backProgress
-                            val duration = (150 * remainingFraction).toLong().coerceAtLeast(50)
-
-                            it.animate()
-                                .translationX(width * 0.3f)
-                                .alpha(0f)
-                                .setDuration(duration)
-                                .withEndAction {
-                                    it.translationX = 0f
-                                    it.alpha = 0f
-
-                                    it.itemAnimator = null
-                                    val i = AtomicInteger(2)
-                                    val next = {
-                                        it.alpha = 1f
-                                        it.itemAnimator = DefaultItemAnimator()
-                                        it.startAnimation(
-                                            AnimationUtils.loadAnimation(
-                                                it.context,
-                                                R.anim.slide_in_left
-                                            )
-                                        )
-                                    }
-                                    songAdapter.onFullyDrawnListener = {
-                                        if (i.decrementAndGet() == 0) next()
-                                    }
-                                    folderAdapter.onFullyDrawnListener = {
-                                        if (i.decrementAndGet() == 0) next()
-                                    }
-                                    val currentPath = fileNodePath.replayCache.firstOrNull() ?: return@withEndAction
-                                    fileNodePath.emitOrDie(currentPath.subList(0, currentPath.size - 1))
-                                }
-                                .start()
-                        } else {
-                            it.animate()
-                                .translationX(0f)
-                                .alpha(1f)
-                                .setDuration(150)
-                                .withEndAction {
-                                    isEnabled = false
-                                    fragment.requireActivity().onBackPressedDispatcher.onBackPressed()
-                                }
-                                .start()
-                        }
-                    }
-                }
-            }
-        )
+    /** Leaves the current folder. Returns false when already at the top level. */
+    fun goUp(): Boolean {
+        if (fileNodePath.value.isNullOrEmpty()) return false
+        enter(null)
+        return true
     }
 
     override fun getPopupText(view: View, position: Int): CharSequence {

@@ -210,11 +210,12 @@ class MainActivity : BaseActivity() {
             override fun handleOnBackPressed() {
                 val pager = supportFragmentManager.findFragmentById(R.id.container)
                         as? ViewPagerFragment
-                if (supportFragmentManager.backStackEntryCount == 0 && pager != null &&
-                    pager.isVisible && pager.canBackToQueuesTab()
-                ) {
-                    pager.openQueuesTab(smoothScroll = true)
-                    return
+                if (supportFragmentManager.backStackEntryCount == 0 && pager != null && pager.isVisible) {
+                    if (pager.goUpFolder()) return
+                    if (pager.canBackToQueuesTab()) {
+                        pager.openQueuesTab(smoothScroll = true)
+                        return
+                    }
                 }
                 isEnabled = false
                 onBackPressedDispatcher.onBackPressed()

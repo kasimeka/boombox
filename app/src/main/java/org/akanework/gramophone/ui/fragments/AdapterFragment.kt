@@ -101,6 +101,12 @@ class AdapterFragment : BaseFragment() {
         super.onDestroyView()
     }
 
+    /** Leaves the folder this page is showing. Returns false if there was no folder to leave. */
+    fun goUpFolder(): Boolean {
+        if (!::adapter.isInitialized) return false
+        return (adapter as? DetailedFolderAdapter)?.goUp() ?: false
+    }
+
     fun onTabReselected() {
         adapter.onTabReselected()
     }
