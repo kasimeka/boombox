@@ -350,10 +350,14 @@ private fun QueuesScreen(
         onDispose { }
     }
 
+    val bottomPaddingDp = with(LocalDensity.current) {
+        activity.playerBottomSheet.bottomPadding.intValue.toDp()
+    }
     Box(Modifier.fillMaxSize()) {
         QueueListContent(
             queues = queues,
             activeQueueId = activeQueue?.id,
+            contentPadding = PaddingValues(bottom = bottomPaddingDp),
             isPlaying = isPlaying,
             pinnedCollections = pinnedCollections,
             activeCurrentRow = activeCurrentRow,
