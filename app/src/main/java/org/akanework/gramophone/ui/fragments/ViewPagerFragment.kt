@@ -174,7 +174,10 @@ class ViewPagerFragment : BaseFragment() {
         appBarLayout = rootView.findViewById(R.id.appbarlayout)
         appBarLayout.enableEdgeToEdgePaddingListener()
         // Tapping the title bar scrolls the page that is showing to its top.
-        appBarLayout.setOnClickListener { scrollCurrentPageToTop() }
+        // Taps on the title area scroll the page to the top. The toolbar's buttons take their own taps.
+        topAppBar.setOnClickListener { scrollCurrentPageToTop() }
+        rootView.findViewById<CollapsingToolbarLayout>(R.id.collapsingtoolbar)
+            .setOnClickListener { scrollCurrentPageToTop() }
         if (!UiExperiments.tabsAtBottom(requireContext())) {
             (tabLayout.parent as? ViewGroup)?.removeView(tabLayout)
             tabLayout.setBackgroundColor(Color.TRANSPARENT)
