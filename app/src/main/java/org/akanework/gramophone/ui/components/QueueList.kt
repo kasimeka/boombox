@@ -131,7 +131,7 @@ fun QueueListContent(
     onPlayQueue: ((Queue) -> Unit)? = null,
     onShuffleQueue: ((Queue) -> Unit)? = null,
     onMoveQueue: ((from: Int, to: Int) -> Unit)? = null,
-    onQueueConvertedToPlaylist: ((queue: Queue, restore: () -> Unit) -> Unit)? = null,
+    onQueueConvertedToPlaylist: ((queue: Queue, finish: () -> Unit) -> Unit)? = null,
     showPlaylists: Boolean = false,
 ) {
     Box(modifier.fillMaxSize()) {
@@ -157,15 +157,19 @@ fun QueueListContent(
             // stale repository order would briefly replace the dropped one.
             var pendingOrder by remember { mutableStateOf<List<UUID>?>(null) }
 
-            LaunchedEffect(queues, dragState.draggingKey) {
+            LaunchedEffect(queues, dragState.draggingKey, dragState.exitingKey) {
                 val pending = pendingOrder
                 if (pending != null) {
                     if (queues.map { it.id } != pending) return@LaunchedEffect
                     pendingOrder = null
                 }
-                if (dragState.draggingKey == null) {
+                // A row that is saving keeps its slot until its exit finishes, so it doesn't jump.
+                if (dragState.draggingKey == null && dragState.exitingKey == null) {
                     if (displayQueues.map { it.queue } != queues) {
-                        displayQueues = queues.map { DragQueue(queueKeySeed++, it) }
+                        // Keep each queue's key so a row that is fading out keeps its animation.
+                        displayQueues = queues.map { queue ->
+                            DragQueue(displayQueues.firstOrNull { it.queue.id == queue.id }?.key ?: queueKeySeed++, queue)
+                        }
                     }
                 }
             }

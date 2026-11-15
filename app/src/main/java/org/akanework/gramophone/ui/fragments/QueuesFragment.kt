@@ -420,15 +420,16 @@ private fun QueuesScreen(
                 scope.launch(Dispatchers.IO) { repository.moveQueue(queue.id, to) }
             },
             showPlaylists = playlistsOn,
-            onQueueConvertedToPlaylist = { queue, restore ->
+            onQueueConvertedToPlaylist = { queue, finish ->
                 scope.launch(Dispatchers.IO) {
                     val playlist = savePlaylist(activity, queue)
                     if (playlist != null) {
                         withContext(Dispatchers.Main) { pendingPlaylists = pendingPlaylists + playlist }
                         deleteQueueFromUi(activity, repository, queue.id)
+                        withContext(Dispatchers.Main) { finish() }
                     } else {
                         withContext(Dispatchers.Main) {
-                            restore()
+                            finish()
                             Toast.makeText(activity, R.string.playlist_not_saved, Toast.LENGTH_SHORT).show()
                         }
                     }

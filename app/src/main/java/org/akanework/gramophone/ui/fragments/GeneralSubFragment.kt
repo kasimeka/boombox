@@ -122,6 +122,7 @@ class GeneralSubFragment : BaseFragment() {
         val title: Flow<String>
         val source: Flow<org.akanework.gramophone.logic.queue.QueueSource?>
         var rawOrderExposed: Sorter.Type? = null
+        var queueTitleOverride: Flow<String>? = null
 
         when (itemType) {
             R.id.album -> {
@@ -221,9 +222,10 @@ class GeneralSubFragment : BaseFragment() {
 
             R.id.playlist_file -> {
                 val file = File(bundle.getString("Path")!!)
-                val playlistTitle = mainActivity.getString(R.string.playlist_query, file.nameWithoutExtension)
-                title = flowOf(playlistTitle)
-                source = flowOf(PlaylistStore.source(file, playlistTitle))
+                val playlistQueueTitle = mainActivity.getString(R.string.playlist_query, file.nameWithoutExtension)
+                title = flowOf(file.nameWithoutExtension)
+                queueTitleOverride = flowOf(playlistQueueTitle)
+                source = flowOf(PlaylistStore.source(file, playlistQueueTitle))
                 itemList = flow {
                     val songsByPath = mainActivity.reader.songListFlow.first()
                         .associateBy { it.getFile()?.absolutePath }
@@ -249,7 +251,7 @@ class GeneralSubFragment : BaseFragment() {
         val songAdapter =
             SongAdapter(
                 this,
-                sharedTitle,
+                queueTitleOverride ?: sharedTitle,
                 itemList,
                 rawOrderExposed = rawOrderExposed,
                 // A playlist file is a dynamic playlist to the adapters, same as Favourites.
