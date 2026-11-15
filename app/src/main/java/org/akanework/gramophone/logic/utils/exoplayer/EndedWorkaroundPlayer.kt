@@ -28,6 +28,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.exoplayer.ExoPlayer
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import org.akanework.gramophone.BuildConfig
@@ -71,7 +72,9 @@ class EndedWorkaroundPlayer(
     override fun playbackState(): Int = super.getPlaybackState()
 
     /** The repeat option the user picked. The player runs it as one of its own repeat modes. */
-    var repeatChoice: QueueRepeatMode = QueueRepeatMode.OFF
+    var repeatChoice: QueueRepeatMode = QueueRepeatMode.fromValue(
+        prefs.getInt(REPEAT_MODE_PREF, QueueRepeatMode.OFF.value)
+    )
         private set
 
     val shuffleOnWrap: Boolean
@@ -87,16 +90,24 @@ class EndedWorkaroundPlayer(
         val mode = QueueRepeatMode.fromValue(repeatMode)
         handleSetRepeatMode(mode.playerValue)
         repeatChoice = mode
+        saveRepeatChoice()
     }
 
     /** A repeat change from a standard player command maps only onto off, one, and all. */
     override fun handleSetRepeatMode(repeatMode: Int): ListenableFuture<*> {
         repeatChoice = QueueRepeatMode.fromValue(repeatMode)
+        saveRepeatChoice()
         return super.handleSetRepeatMode(repeatMode)
+    }
+
+    /** The repeat choice is one global setting, so it is kept across restarts and queues. */
+    private fun saveRepeatChoice() {
+        prefs.edit { putInt(REPEAT_MODE_PREF, repeatChoice.value) }
     }
 
     companion object {
         private const val TAG = "EndedWorkaroundPlayer"
+        private const val REPEAT_MODE_PREF = "repeat_mode"
 
     }
 

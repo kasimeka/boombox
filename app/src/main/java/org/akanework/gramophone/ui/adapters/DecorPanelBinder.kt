@@ -133,7 +133,6 @@ class DecorPanelBinder(
             controller.setMediaItemsWithTitle(
                 songs,
                 title = title,
-                repeatMode = REPEAT_MODE_OFF,
                 original = !shuffle,
                 source = source,
             )

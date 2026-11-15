@@ -260,7 +260,6 @@ private fun QueuesScreen(
         controller.setMediaItemsWithTitle(
             songs,
             title = title,
-            repeatMode = Player.REPEAT_MODE_OFF,
             original = !shuffle,
             source = source,
         )

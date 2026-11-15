@@ -662,7 +662,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
                             restored.positionMs,
                             restored.queue.title,
                             restored.ended,
-                            restored.queue.repeatMode.value,
+                            null,
                             null,
                         )
                         activeQueuePersistence.adopt(restored.queue)
