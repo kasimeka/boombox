@@ -448,6 +448,7 @@ class ViewPagerFragment : BaseFragment() {
 
     /** Scrolls the page that is showing to its top. */
     private fun scrollCurrentPageToTop() {
+        appBarLayout.setExpanded(true, true)
         when (val page = childFragmentManager.findFragmentByTag("f${adapter.getItemId(viewPager2.currentItem)}")) {
             is AdapterFragment -> page.scrollToTop()
             is QueuesFragment -> page.scrollToTop()
