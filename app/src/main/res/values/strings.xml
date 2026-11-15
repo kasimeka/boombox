@@ -416,6 +416,8 @@
     <string name="playlist_not_saved">Could not save playlist</string>
     <!-- Shown above the playlists divider while a queue is dragged over it -->
     <string name="release_to_save_playlist">Release to save as playlist</string>
+    <!-- Toast when a playlist could not be renamed -->
+    <string name="playlist_rename_failed">Could not rename playlist</string>
     <!-- Toast when a playlist was deleted outside the app and is opened or played -->
     <string name="playlist_not_found">Playlist not found</string>
     <string name="queue_reordered">Queue reordered</string>

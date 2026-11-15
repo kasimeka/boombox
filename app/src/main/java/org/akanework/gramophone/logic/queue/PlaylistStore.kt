@@ -91,9 +91,43 @@ object PlaylistStore {
      */
     fun forgetMissing(context: Context, file: File) {
         Toast.makeText(context, R.string.playlist_not_found, Toast.LENGTH_SHORT).show()
-        MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(MIME_TYPE)) { _, _ ->
-            savedCount.update { it + 1 }
+        scan(context, file)
+    }
+
+    /** Renames a playlist file. Returns the new file, or null if the name is unusable or the rename failed. */
+    fun rename(context: Context, file: File, title: String): File? {
+        val base = illegalFileNameCharacters.replace(title, "").trim()
+        if (base.isEmpty()) return null
+        if (base == file.nameWithoutExtension) return file
+        val target = uniqueFile(file.parentFile ?: return null, base)
+        if (!file.renameTo(target)) return null
+        scan(context, file, target)
+        return target
+    }
+
+    /** Deletes a playlist file and has the media index forget it. */
+    fun delete(context: Context, file: File): Boolean {
+        if (!file.delete()) return false
+        scan(context, file)
+        return true
+    }
+
+    private fun scan(context: Context, vararg files: File) {
+        MediaScannerConnection.scanFile(
+            context,
+            files.map { it.absolutePath }.toTypedArray(),
+            arrayOf(MIME_TYPE),
+        ) { _, _ -> savedCount.update { it + 1 } }
+    }
+
+    private fun uniqueFile(dir: File, base: String): File {
+        var file = File(dir, "$base.$EXTENSION")
+        var suffix = 2
+        while (file.exists()) {
+            file = File(dir, "$base ($suffix).$EXTENSION")
+            suffix++
         }
+        return file
     }
 
     /** The song paths a playlist file lists, in playlist order. A file that is gone lists nothing. */
@@ -114,16 +148,9 @@ object PlaylistStore {
         val dir = context.externalMediaDirs.firstOrNull()?.let { File(it, FOLDER) } ?: return null
         if (!dir.isDirectory && !dir.mkdirs()) return null
         val base = illegalFileNameCharacters.replace(title, "").trim().ifEmpty { "Playlist" }
-        var file = File(dir, "$base.$EXTENSION")
-        var suffix = 2
-        while (file.exists()) {
-            file = File(dir, "$base ($suffix).$EXTENSION")
-            suffix++
-        }
+        val file = uniqueFile(dir, base)
         file.writeBytes(QueueExport.content(rows))
-        MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(MIME_TYPE)) { _, _ ->
-            savedCount.update { it + 1 }
-        }
+        scan(context, file)
         return file
     }
 }

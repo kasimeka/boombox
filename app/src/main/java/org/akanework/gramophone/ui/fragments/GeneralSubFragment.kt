@@ -38,6 +38,10 @@ import org.akanework.gramophone.logic.getFile
 import org.akanework.gramophone.logic.queue.M3uImport
 import org.akanework.gramophone.logic.queue.PlaylistStore
 import java.io.File
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.content.res.AppCompatResources
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
@@ -63,6 +67,33 @@ import uk.akane.libphonograph.dynamicitem.RecentlyAdded
 class GeneralSubFragment : BaseFragment() {
     companion object {
         private const val TAG = "GeneralSubFragment"
+    }
+
+    private fun renamePlaylist(file: File) {
+        val input = EditText(requireContext()).apply { setText(file.nameWithoutExtension) }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.rename_queue)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                if (PlaylistStore.rename(requireContext(), file, input.text.toString()) == null) {
+                    Toast.makeText(requireContext(), R.string.playlist_rename_failed, Toast.LENGTH_SHORT).show()
+                }
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun deletePlaylist(file: File) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete)
+            .setMessage(getString(R.string.delete_really, file.nameWithoutExtension))
+            .setPositiveButton(R.string.delete) { _, _ ->
+                PlaylistStore.delete(requireContext(), file)
+                requireActivity().supportFragmentManager.popBackStack()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     override fun onCreateView(
@@ -230,6 +261,19 @@ class GeneralSubFragment : BaseFragment() {
         // Build FastScroller.
         recyclerView.fastScroll(songAdapter, songAdapter.itemHeightHelper)
 
+        if (itemType == R.id.playlist_file) {
+            val playlistFile = File(bundle.getString("Path")!!)
+            topAppBar.overflowIcon =
+                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_more_vert_alt_topappbar)
+            topAppBar.inflateMenu(R.menu.playlist_menu)
+            topAppBar.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.playlist_rename -> renamePlaylist(playlistFile)
+                    R.id.playlist_delete -> deletePlaylist(playlistFile)
+                }
+                true
+            }
+        }
         topAppBar.setNavigationOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
