@@ -18,7 +18,9 @@
 package org.akanework.gramophone.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
@@ -104,6 +106,8 @@ private class QueueListDragState {
     var dragStartIndex by mutableStateOf<Int?>(null)
     var dragStartQueues by mutableStateOf<List<Queue>>(emptyList())
     var dragOffset by mutableFloatStateOf(0f)
+    var exitingKey by mutableStateOf<Long?>(null)
+    var exitOffset by mutableFloatStateOf(0f)
 }
 
 /**
@@ -123,6 +127,7 @@ fun QueueListContent(
     onPlayQueue: ((Queue) -> Unit)? = null,
     onShuffleQueue: ((Queue) -> Unit)? = null,
     onMoveQueue: ((from: Int, to: Int) -> Unit)? = null,
+    onQueueConvertedToPlaylist: ((queue: Queue, restore: () -> Unit) -> Unit)? = null,
 ) {
     Box(modifier.fillMaxSize()) {
         if (queues.isEmpty() && pinnedCollections.isEmpty()) {
@@ -192,6 +197,13 @@ fun QueueListContent(
                 }
             }
 
+            fun isAboveSeparator(key: Long, dragOffset: Float): Boolean {
+                val visible = listState.layoutInfo.visibleItemsInfo
+                val dragged = visible.firstOrNull { it.key == key } ?: return false
+                val separator = visible.firstOrNull { it.key == "pinned_divider" } ?: return false
+                return dragged.offset + dragOffset < separator.offset + separator.size
+            }
+
             // Incremental in-drag reordering with edge auto-scroll.
             LaunchedEffect(dragState.draggingKey) {
                 if (dragState.draggingKey == null) return@LaunchedEffect
@@ -242,7 +254,9 @@ fun QueueListContent(
                     }
                     if (pinnedExpanded) {
                         items(items = pinnedCollections, key = { "pinned_${it.id}" }) { collection ->
-                            PinnedCollectionRow(item = collection)
+                            Box(Modifier.animateItem()) {
+                                PinnedCollectionRow(item = collection)
+                            }
                         }
                     }
                     item(key = "pinned_divider") {
@@ -299,6 +313,19 @@ fun QueueListContent(
                         QueueOrderEditor.canShuffleEverything(queue.rows.size, anchor)
                     }
                     val isDragging = dragState.draggingKey == item.key
+                    val isExiting = dragState.exitingKey == item.key
+                    val exitAlpha by animateFloatAsState(
+                        targetValue = if (isExiting) 0f else 1f,
+                        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing),
+                        label = "queueExit",
+                        finishedListener = {
+                            if (isExiting) {
+                                onQueueConvertedToPlaylist?.invoke(queue) {
+                                    dragState.exitingKey = null
+                                }
+                            }
+                        },
+                    )
                     val dragModifier = if (onMoveQueue != null) {
                         Modifier.pointerInput(item.key) {
                             detectDragGesturesAfterLongPress(
@@ -316,9 +343,18 @@ fun QueueListContent(
                                 onDragEnd = {
                                     val key = dragState.draggingKey
                                     val startIndex = dragState.dragStartIndex
+                                    val toPlaylist = key != null && onQueueConvertedToPlaylist != null &&
+                                        isAboveSeparator(key, dragState.dragOffset)
                                     dragState.draggingKey = null
                                     dragState.dragStartIndex = null
                                     dragState.dragStartQueues = emptyList()
+                                    if (toPlaylist) {
+                                        // The row stays where it was released and fades out; see exitAlpha.
+                                        dragState.exitOffset = dragState.dragOffset
+                                        dragState.dragOffset = 0f
+                                        dragState.exitingKey = key
+                                        return@detectDragGesturesAfterLongPress
+                                    }
                                     dragState.dragOffset = 0f
                                     if (key == null || startIndex == null) return@detectDragGesturesAfterLongPress
                                     val finalQueues = latestDisplayQueues
@@ -350,7 +386,14 @@ fun QueueListContent(
                             .then(dragModifier)
                             .zIndex(if (isDragging) 1f else 0f)
                             .graphicsLayer {
-                                translationY = if (isDragging) dragState.dragOffset else 0f
+                                translationY = when {
+                                    isExiting -> dragState.exitOffset
+                                    isDragging -> dragState.dragOffset
+                                    else -> 0f
+                                }
+                                alpha = exitAlpha
+                                scaleX = 0.92f + 0.08f * exitAlpha
+                                scaleY = 0.92f + 0.08f * exitAlpha
                                 if (isDragging) shadowElevation = 8f
                             },
                     )

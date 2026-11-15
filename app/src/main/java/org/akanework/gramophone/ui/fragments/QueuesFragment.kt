@@ -273,11 +273,16 @@ private fun QueuesScreen(
     }
 
     var playlistFiles by remember { mutableStateOf<List<PlaylistStore.Playlist>>(emptyList()) }
+    // A playlist just saved from a queue, shown before the media scan indexes it.
+    var pendingPlaylists by remember { mutableStateOf<List<PlaylistStore.Playlist>>(emptyList()) }
     val playlistRevision by PlaylistStore.revision.collectAsState()
     LaunchedEffect(playlistRevision) {
         playlistFiles = withContext(Dispatchers.IO) { PlaylistStore.list(activity) }
+        pendingPlaylists = emptyList()
     }
-    val playlistCollections = playlistFiles.map { playlist ->
+    val allPlaylists = (playlistFiles + pendingPlaylists.filter { p -> playlistFiles.none { it.file == p.file } })
+        .sortedBy { it.title.lowercase() }
+    val playlistCollections = allPlaylists.map { playlist ->
         PinnedQueueCollection(
             id = "playlist_${playlist.file.name}",
             title = playlist.title,
@@ -412,6 +417,20 @@ private fun QueuesScreen(
                 val queue = queues.getOrNull(from) ?: return@QueueListContent
                 scope.launch(Dispatchers.IO) { repository.moveQueue(queue.id, to) }
             },
+            onQueueConvertedToPlaylist = { queue, restore ->
+                scope.launch(Dispatchers.IO) {
+                    val playlist = savePlaylist(activity, queue)
+                    if (playlist != null) {
+                        withContext(Dispatchers.Main) { pendingPlaylists = pendingPlaylists + playlist }
+                        deleteQueueFromUi(activity, repository, queue.id)
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            restore()
+                            Toast.makeText(activity, R.string.playlist_not_saved, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            },
         )
     }
 
@@ -459,7 +478,7 @@ private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: Fi
  * Writes the queue's songs as a playlist file and leaves the queue alone. Rows without a local
  * file are left out. Returns false when no playlist was written.
  */
-private fun savePlaylist(activity: MainActivity, queue: Queue): Boolean {
+private fun savePlaylist(activity: MainActivity, queue: Queue): PlaylistStore.Playlist? {
     val rows = queue.rows.mapNotNull { encoded ->
         val item = MediaRowCodec.decode(encoded) ?: return@mapNotNull null
         val path = item.getFile()?.absolutePath ?: return@mapNotNull null
@@ -469,8 +488,9 @@ private fun savePlaylist(activity: MainActivity, queue: Queue): Boolean {
             artist = item.mediaMetadata.artist?.toString(),
         )
     }
-    if (rows.isEmpty()) return false
-    return PlaylistStore.create(activity, queue.title, rows) != null
+    if (rows.isEmpty()) return null
+    val file = PlaylistStore.create(activity, queue.title, rows) ?: return null
+    return PlaylistStore.Playlist(file, file.nameWithoutExtension, rows.size)
 }
 
 /** Opens the queue's detail without changing the active queue or starting playback. */
@@ -1059,7 +1079,7 @@ private fun QueueDetailScreen(
                     onClick = {
                         actionsOpen = false
                         scope.launch(Dispatchers.IO) {
-                            val saved = savePlaylist(activity, loadedQueue)
+                            val saved = savePlaylist(activity, loadedQueue) != null
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
