@@ -20,6 +20,7 @@ package org.akanework.gramophone.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -445,15 +446,20 @@ private fun PinnedDropHint(active: Boolean) {
         label = "dropLine",
     )
     val labelAlpha by animateFloatAsState(if (active) 1f else 0f, label = "dropLabel")
-    // Fixed height, so showing the label never moves the queues under a dragged row.
-    Box(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 20.dp)) {
+    // Grows smoothly when a queue is dragged over it, so the label has room without a jump.
+    val height by animateDpAsState(if (active) 26.dp else 13.dp, label = "dropHeight")
+    val linePadding by animateDpAsState(if (active) 2.dp else 6.dp, label = "dropLinePadding")
+    Box(Modifier.fillMaxWidth().height(height).padding(horizontal = 20.dp)) {
         Text(
             text = stringResource(R.string.release_to_save_playlist),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.align(Alignment.TopCenter).graphicsLayer { alpha = labelAlpha },
         )
-        HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter), color = lineColor)
+        HorizontalDivider(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = linePadding),
+            color = lineColor,
+        )
     }
 }
 
