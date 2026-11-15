@@ -111,6 +111,10 @@ class AdapterFragment : BaseFragment() {
         adapter.onTabReselected()
     }
 
+    fun scrollToTop() {
+        if (::recyclerView.isInitialized) recyclerView.smoothScrollToPosition(0)
+    }
+
     fun startRequest(sender: IntentSender, data: Bundle) {
         pendingRequest = data
         intentSender.launch(IntentSenderRequest.Builder(sender).build())

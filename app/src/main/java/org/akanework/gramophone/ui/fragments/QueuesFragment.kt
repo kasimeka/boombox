@@ -203,6 +203,12 @@ import kotlin.math.roundToInt
 
 /** The Queues home tab: lists every durable queue. */
 class QueuesFragment : BaseFragment() {
+    private val scrollToTopRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun scrollToTop() {
+        scrollToTopRequests.tryEmit(Unit)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -215,6 +221,7 @@ class QueuesFragment : BaseFragment() {
                 QueuesScreen(
                     activity = requireActivity() as MainActivity,
                     lifecycleOwner = viewLifecycleOwner,
+                    scrollToTopRequests = scrollToTopRequests,
                 )
             }
         }
@@ -225,6 +232,7 @@ class QueuesFragment : BaseFragment() {
 private fun QueuesScreen(
     activity: MainActivity,
     lifecycleOwner: LifecycleOwner,
+    scrollToTopRequests: Flow<Unit>,
 ) {
     val repository = remember { activity.gramophoneApplication.queueRepository }
     val queues by repository.queues.collectAsState(initial = emptyList())
@@ -234,6 +242,9 @@ private fun QueuesScreen(
     val favouritesTitle = stringResource(R.string.playlist_favourite)
     val recentlyAddedTitle = stringResource(R.string.recently_added)
     val listState = rememberLazyListState()
+    LaunchedEffect(scrollToTopRequests) {
+        scrollToTopRequests.collect { listState.animateScrollToItem(0) }
+    }
     val scope = rememberCoroutineScope()
     var isPlaying by remember { mutableStateOf(activity.getPlayer()?.isPlaying == true) }
     var activeCurrentRow by remember { mutableStateOf(activity.getPlayer()?.currentMediaItemIndex?.takeIf { it >= 0 }) }

@@ -173,6 +173,8 @@ class ViewPagerFragment : BaseFragment() {
         rootView.findViewById<CollapsingToolbarLayout>(R.id.collapsingtoolbar).setExpandedAppBarHeight()
         appBarLayout = rootView.findViewById(R.id.appbarlayout)
         appBarLayout.enableEdgeToEdgePaddingListener()
+        // Tapping the title bar scrolls the page that is showing to its top.
+        appBarLayout.setOnClickListener { scrollCurrentPageToTop() }
         if (!UiExperiments.tabsAtBottom(requireContext())) {
             (tabLayout.parent as? ViewGroup)?.removeView(tabLayout)
             tabLayout.setBackgroundColor(Color.TRANSPARENT)
@@ -439,6 +441,14 @@ class ViewPagerFragment : BaseFragment() {
     fun onTabReselected(position: Int) {
         (childFragmentManager.findFragmentByTag("f${adapter.getItemId(position)}")
                 as? AdapterFragment)?.onTabReselected()
+    }
+
+    /** Scrolls the page that is showing to its top. */
+    private fun scrollCurrentPageToTop() {
+        when (val page = childFragmentManager.findFragmentByTag("f${adapter.getItemId(viewPager2.currentItem)}")) {
+            is AdapterFragment -> page.scrollToTop()
+            is QueuesFragment -> page.scrollToTop()
+        }
     }
 
     /** Switch to the Queues tab, optionally swiping to it. */
