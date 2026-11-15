@@ -356,6 +356,7 @@ class ViewPagerFragment : BaseFragment() {
                 viewPager2
             )
         viewPager2.adapter = adapter
+        updateSearchIcon(topAppBar)
 
         val enoughSections = adapter.itemCount >= 2
         viewPager2.isUserInputEnabled = enoughSections
@@ -363,10 +364,17 @@ class ViewPagerFragment : BaseFragment() {
             if (view != null) {
                 viewPager2.isUserInputEnabled = adapter.itemCount >= 2
                 if (tabLayoutMediator != null) updateBottomTabBar()
+                updateSearchIcon(topAppBar)
             }
         }
 
         return rootView
+    }
+
+    /** With only the Queues tab left, the search button becomes a library icon. */
+    private fun updateSearchIcon(topAppBar: MaterialToolbar) {
+        val iconRes = if (adapter.itemCount == 1) R.drawable.ic_library_music else R.drawable.ic_search
+        topAppBar.menu.findItem(R.id.search)?.setIcon(iconRes)
     }
 
     override fun onStart() {
