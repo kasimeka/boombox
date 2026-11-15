@@ -118,6 +118,8 @@
     <string name="search">Search</string>
     <!-- Used to name the list of songs resulting from a search -->
     <string name="search_query">Search: %s</string>
+    <!-- Used to name the queue started from a playlist -->
+    <string name="playlist_query">Playlist: %s</string>
     <!-- Share a song's file with some other app -->
     <string name="share">Share</string>
     <!-- Displayed above app name -->

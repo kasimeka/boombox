@@ -27,8 +27,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.queue.M3uImport
+import org.akanework.gramophone.logic.queue.MirrorableQueue
 import org.akanework.gramophone.logic.queue.QueueExport
-import org.akanework.gramophone.logic.queue.QueueExportRow
 import org.akanework.gramophone.logic.queue.QueueSource
 import org.akanework.gramophone.logic.queue.QueueSourceKind
 import java.io.File
@@ -84,10 +84,10 @@ object PlaylistStore {
     }
 
     /** The queue source for a playlist, keyed by its file so replays reuse the same queue. */
-    fun source(file: File) = QueueSource(
+    fun source(file: File, displayName: String) = QueueSource(
         kind = QueueSourceKind.PLAYLIST,
         identifier = file.absolutePath,
-        displayName = file.nameWithoutExtension,
+        displayName = displayName,
     )
 
     /**
@@ -144,17 +144,17 @@ object PlaylistStore {
         }
 
     /**
-     * Writes [rows] to a new playlist named after [title], keeping its punctuation. Characters that
-     * cannot appear in a file name are dropped, and a taken name gets a number. The file is scanned
-     * into the media index, and [revision] goes up once that finishes. Returns null when the app's
-     * media folder is unavailable.
+     * Copies [mirror] into the playlists folder, named after [title]. Characters that cannot appear in
+     * a file name are dropped, and a taken name gets a number. The copy is scanned into the media
+     * index, and [revision] goes up once that finishes. Returns null when the app's media folder is
+     * unavailable.
      */
-    fun create(context: Context, title: String, rows: List<QueueExportRow>): File? {
+    fun copyIntoLibrary(context: Context, title: String, mirror: File): File? {
         val dir = context.externalMediaDirs.firstOrNull()?.let { File(it, FOLDER) } ?: return null
         if (!dir.isDirectory && !dir.mkdirs()) return null
         val base = illegalFileNameCharacters.replace(title, "").trim().ifEmpty { "Playlist" }
         val file = uniqueFile(dir, base)
-        file.writeBytes(QueueExport.content(rows))
+        mirror.copyTo(file)
         scan(context, file)
         return file
     }

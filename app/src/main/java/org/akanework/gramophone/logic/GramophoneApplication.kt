@@ -138,7 +138,7 @@ class GramophoneApplication : Application(), SingletonImageLoader.Factory,
      * The one background exporter. Mutations only leave a dirty marker here, so editing and
      * playback never wait on MediaStore or file writes.
      */
-    private val queueExporter: QueueExporter by lazy {
+    val queueExporter: QueueExporter by lazy {
         QueueExporter(
             writer = AndroidQueueMirrorWriter(this, "Android/media/$packageName/Queues"),
             rowSource = ::queueExportRows,

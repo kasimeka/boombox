@@ -21,7 +21,6 @@ import org.akanework.gramophone.logic.queue.M3uImport
 import org.akanework.gramophone.experiments.playlists.PlaylistStore
 import org.akanework.gramophone.experiments.Experiments
 import org.akanework.gramophone.logic.queue.QueueDragReorder
-import org.akanework.gramophone.logic.queue.QueueExportRow
 import java.io.File
 
 import android.annotation.SuppressLint
@@ -175,6 +174,7 @@ import org.akanework.gramophone.logic.queue.QueuePlaybackAction
 import org.akanework.gramophone.logic.queue.QueuePlaybackRules
 import org.akanework.gramophone.logic.queue.QueuePlaybackState
 import org.akanework.gramophone.logic.queue.QueueRepository
+import org.akanework.gramophone.logic.queue.QueueExport
 import org.akanework.gramophone.logic.queue.QueueSource
 import org.akanework.gramophone.logic.queue.QueueSourceKind
 import org.akanework.gramophone.logic.renameQueue
@@ -466,11 +466,12 @@ private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: Fi
         if (songs.isEmpty()) return@launch
         // prepare() and play() must run on the application thread, not on IO.
         val controller = activity.getPlayer() ?: return@launch
+        val title = activity.getString(R.string.playlist_query, file.nameWithoutExtension)
         controller.setMediaItemsWithTitle(
             if (shuffle) songs.shuffled() else songs,
-            title = file.nameWithoutExtension,
+            title = title,
             original = !shuffle,
-            source = PlaylistStore.source(file),
+            source = PlaylistStore.source(file, title),
         )
         controller.prepare()
         controller.play()
@@ -481,19 +482,19 @@ private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: Fi
  * Writes the queue's songs as a playlist file and leaves the queue alone. Rows without a local
  * file are left out. Returns false when no playlist was written.
  */
-private fun savePlaylist(activity: MainActivity, queue: Queue): PlaylistStore.Playlist? {
-    val rows = queue.rows.mapNotNull { encoded ->
-        val item = MediaRowCodec.decode(encoded) ?: return@mapNotNull null
-        val path = item.getFile()?.absolutePath ?: return@mapNotNull null
-        QueueExportRow(
-            path = path,
-            title = item.mediaMetadata.title?.toString(),
-            artist = item.mediaMetadata.artist?.toString(),
-        )
+private suspend fun savePlaylist(activity: MainActivity, queue: Queue): PlaylistStore.Playlist? {
+    val queuesDir = activity.externalMediaDirs.firstOrNull()?.let { File(it, "Queues") } ?: return null
+    var mirror = File(queuesDir, queue.exportFileName ?: QueueExport.mirrorName(queue))
+    if (!mirror.isFile) {
+        // The mirror was deleted outside the app, so export it again before copying it.
+        val exporter = activity.gramophoneApplication.queueExporter
+        exporter.enqueue(queue)
+        exporter.flush()
+        mirror = File(queuesDir, QueueExport.mirrorName(queue))
+        if (!mirror.isFile) return null
     }
-    if (rows.isEmpty()) return null
-    val file = PlaylistStore.create(activity, queue.title, rows) ?: return null
-    return PlaylistStore.Playlist(file, file.nameWithoutExtension, rows.size)
+    val file = PlaylistStore.copyIntoLibrary(activity, queue.title, mirror) ?: return null
+    return PlaylistStore.Playlist(file, file.nameWithoutExtension, PlaylistStore.entries(file).size)
 }
 
 /** Opens the queue's detail without changing the active queue or starting playback. */
