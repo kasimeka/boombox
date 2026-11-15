@@ -102,7 +102,7 @@ android {
 
     defaultConfig {
         applicationId = appIdOverride ?: "org.kasimeka.boombox"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 24
         versionName = "1.0"
