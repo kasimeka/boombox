@@ -43,6 +43,7 @@ import android.view.SearchEvent
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -202,6 +203,24 @@ class MainActivity : BaseActivity() {
             })
         }
         playerBottomSheet = findViewById(R.id.player_layout)
+
+        // Back swipes to the Queues tab before leaving the app. Added before the bottom sheet's
+        // back callback, so an expanded player still collapses first.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val pager = supportFragmentManager.findFragmentById(R.id.container)
+                        as? ViewPagerFragment
+                if (supportFragmentManager.backStackEntryCount == 0 && pager != null &&
+                    pager.isVisible && pager.canBackToQueuesTab()
+                ) {
+                    pager.openQueuesTab(smoothScroll = true)
+                    return
+                }
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        })
 
         // Check all permissions.
         if (!hasAudioPermission()) {

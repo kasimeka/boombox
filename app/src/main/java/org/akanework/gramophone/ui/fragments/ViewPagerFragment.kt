@@ -417,12 +417,21 @@ class ViewPagerFragment : BaseFragment() {
                 as? AdapterFragment)?.onTabReselected()
     }
 
-    /** Switch to the Queues tab. */
-    fun openQueuesTab() {
+    /** Switch to the Queues tab, optionally swiping to it. */
+    fun openQueuesTab(smoothScroll: Boolean = false) {
+        val position = queuesTabPosition() ?: return
+        viewPager2.setCurrentItem(position, smoothScroll)
+    }
+
+    /** Whether back should swipe to Queues first: the Queues tab exists and is not selected. */
+    fun canBackToQueuesTab(): Boolean {
+        val position = queuesTabPosition() ?: return false
+        return viewPager2.currentItem != position
+    }
+
+    private fun queuesTabPosition(): Int? {
         val queuesId = R.id.playlists.toLong()
-        val position = (0 until adapter.itemCount).firstOrNull { adapter.getItemId(it) == queuesId }
-            ?: return
-        viewPager2.setCurrentItem(position, false)
+        return (0 until adapter.itemCount).firstOrNull { adapter.getItemId(it) == queuesId }
     }
 
     override fun onDestroyView() {
