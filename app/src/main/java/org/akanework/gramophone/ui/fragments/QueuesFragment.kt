@@ -283,7 +283,7 @@ private fun QueuesScreen(
             title = playlist.title,
             songCount = playlist.songCount,
             iconRes = R.drawable.ic_playlist_play,
-            onClick = { playPlaylist(activity, scope, playlist.file, shuffle = false) },
+            onClick = { openPlaylist(activity, playlist.file) },
             onPlay = { playPlaylist(activity, scope, playlist.file, shuffle = false) },
             onShuffle = { playPlaylist(activity, scope, playlist.file, shuffle = true) },
         )
@@ -417,6 +417,13 @@ private fun QueuesScreen(
 
 }
 
+/** Shows a playlist's songs without changing playback. */
+private fun openPlaylist(activity: MainActivity, file: File) {
+    activity.startFragment(PlaylistDetailFragment()) {
+        putString(PlaylistDetailFragment.ARG_PATH, file.absolutePath)
+    }
+}
+
 /** Plays a playlist's songs that are in the library, in file order or shuffled. */
 private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: File, shuffle: Boolean) {
     scope.launch {
@@ -432,6 +439,7 @@ private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: Fi
             if (shuffle) songs.shuffled() else songs,
             title = file.nameWithoutExtension,
             original = !shuffle,
+            source = PlaylistStore.source(file),
         )
         controller.prepare()
         controller.play()

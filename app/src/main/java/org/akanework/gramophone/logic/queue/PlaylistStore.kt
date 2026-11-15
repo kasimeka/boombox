@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
+import java.io.IOException
 import java.util.Locale
 
 /**
@@ -68,15 +69,27 @@ object PlaylistStore {
                 playlists += Playlist(
                     file = file,
                     title = cursor.getString(nameColumn) ?: file.nameWithoutExtension,
-                    songCount = M3uImport.entries(file.readText()).size,
+                    songCount = entries(file).size,
                 )
             }
         }
         return playlists.sortedBy { it.title.lowercase(Locale.ROOT) }
     }
 
-    /** The song paths a playlist file lists, in playlist order. */
-    fun entries(file: File): List<String> = M3uImport.entries(file.readText())
+    /** The queue source for a playlist, keyed by its file so replays reuse the same queue. */
+    fun source(file: File) = QueueSource(
+        kind = QueueSourceKind.PLAYLIST,
+        identifier = file.absolutePath,
+        displayName = file.nameWithoutExtension,
+    )
+
+    /** The song paths a playlist file lists, in playlist order. A file that is gone lists nothing. */
+    fun entries(file: File): List<String> =
+        try {
+            M3uImport.entries(file.readText())
+        } catch (_: IOException) {
+            emptyList()
+        }
 
     /**
      * Writes [rows] to a new playlist named after [title], keeping its punctuation. Characters that

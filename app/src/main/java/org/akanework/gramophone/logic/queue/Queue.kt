@@ -69,6 +69,7 @@ enum class QueueSourceKind {
     RECENTLY_ADDED,
     ALL_SONGS,
     SEARCH_RESULTS,
+    PLAYLIST,
     ;
 
     /** Numbered grab-bags are titled from the queue counter instead of the source. */
