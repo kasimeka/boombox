@@ -70,6 +70,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.children
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updateMargins
+import androidx.core.view.updatePadding
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import org.akanework.gramophone.ui.components.PlayerBottomSheet
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -738,6 +744,27 @@ fun View.enableEdgeToEdgePaddingListener(
             )
             extra?.invoke(i)
             return@setOnApplyWindowInsetsListener insets
+        }
+    }
+}
+
+/**
+ * Keeps the bottom of a View clear of the mini player. Reads the mini player's observable padding
+ * rather than relying on window insets, which can stop before reaching a View that sits beside
+ * a sibling consuming them.
+ */
+fun View.enableMiniPlayerBottomPadding(
+    owner: LifecycleOwner, playerBottomSheet: PlayerBottomSheet, ime: Boolean = false
+) {
+    val view = this
+    val basePaddingBottom = paddingBottom
+    owner.lifecycleScope.launch {
+        snapshotFlow { playerBottomSheet.bottomPadding.intValue }.collect { miniPlayerPadding ->
+            val mask = WindowInsetsCompat.Type.systemBars() or
+                    WindowInsetsCompat.Type.displayCutout() or
+                    if (ime) WindowInsetsCompat.Type.ime() else 0
+            val insetBottom = ViewCompat.getRootWindowInsets(view)?.getInsets(mask)?.bottom ?: 0
+            view.updatePadding(bottom = basePaddingBottom + max(insetBottom, miniPlayerPadding))
         }
     }
 }

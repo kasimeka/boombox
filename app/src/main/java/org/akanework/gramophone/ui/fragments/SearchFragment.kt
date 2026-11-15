@@ -22,10 +22,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import androidx.compose.runtime.snapshotFlow
-import androidx.core.view.updatePadding
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.collectAsState
@@ -44,6 +40,8 @@ import kotlinx.coroutines.flow.map
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.closeKeyboard
 import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
+import androidx.lifecycle.lifecycleScope
+import org.akanework.gramophone.logic.enableMiniPlayerBottomPadding
 import org.akanework.gramophone.logic.showKeyboard
 import org.akanework.gramophone.logic.utils.matchesSearch
 import org.akanework.gramophone.logic.ui.MyRecyclerView
@@ -96,12 +94,7 @@ class SearchFragment : BaseFragment() {
             )
 
         recyclerView.enableEdgeToEdgePaddingListener(ime = true)
-        // The search bar sits beside this list in a LinearLayout, and its insets can stop before
-        // reaching the list. Read the mini player's padding directly, as the queue screens do.
-        viewLifecycleOwner.lifecycleScope.launch {
-            snapshotFlow { mainActivity.playerBottomSheet.bottomPadding.intValue }
-                .collect { recyclerView.updatePadding(bottom = it) }
-        }
+        recyclerView.enableMiniPlayerBottomPadding(viewLifecycleOwner, mainActivity.playerBottomSheet)
         recyclerView.layoutManager = LinearLayoutManager(activity)
         recyclerView.adapter = songAdapter.concatAdapter
 

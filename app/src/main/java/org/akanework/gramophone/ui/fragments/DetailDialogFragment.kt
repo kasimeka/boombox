@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
+import org.akanework.gramophone.logic.enableMiniPlayerBottomPadding
 import org.akanework.gramophone.logic.setExpandedAppBarHeight
 import org.akanework.gramophone.logic.getBitrate
 import org.akanework.gramophone.logic.getFile
@@ -59,6 +60,9 @@ class DetailDialogFragment : BaseFragment(MiniPlayerScreenPolicy.DENIED) {
         rootView.findViewById<CollapsingToolbarLayout>(R.id.collapsingtoolbar).setExpandedAppBarHeight()
         rootView.findViewById<AppBarLayout>(R.id.appbarlayout).enableEdgeToEdgePaddingListener()
         rootView.findViewById<View>(R.id.scrollView).enableEdgeToEdgePaddingListener()
+        rootView.findViewById<View>(R.id.scrollView).enableMiniPlayerBottomPadding(
+            viewLifecycleOwner, mainActivity.playerBottomSheet
+        )
         rootView.findViewById<MaterialToolbar>(R.id.topAppBar).setNavigationOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
