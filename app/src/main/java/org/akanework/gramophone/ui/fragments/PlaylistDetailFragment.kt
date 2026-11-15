@@ -36,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
@@ -89,6 +90,13 @@ class PlaylistDetailFragment : BaseFragment() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaylistDetailScreen(activity: MainActivity, file: File, onBack: () -> Unit) {
+    // The playlist was deleted while it was open: close it and let the index forget it.
+    LaunchedEffect(file) {
+        if (!file.isFile) {
+            PlaylistStore.forgetMissing(activity, file)
+            onBack()
+        }
+    }
     val songs by produceState<List<MediaItem>?>(initialValue = null, file) {
         value = withContext(Dispatchers.IO) {
             val songsByPath = activity.reader.songListFlow.first()

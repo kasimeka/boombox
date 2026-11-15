@@ -20,6 +20,8 @@ package org.akanework.gramophone.logic.queue
 import android.content.Context
 import android.media.MediaScannerConnection
 import android.provider.MediaStore
+import android.widget.Toast
+import org.akanework.gramophone.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,6 +84,17 @@ object PlaylistStore {
         identifier = file.absolutePath,
         displayName = file.nameWithoutExtension,
     )
+
+    /**
+     * Has the media index drop a playlist file that is gone, then reloads the lists. Until the scan
+     * finishes, [list] already leaves the missing file out.
+     */
+    fun forgetMissing(context: Context, file: File) {
+        Toast.makeText(context, R.string.playlist_not_found, Toast.LENGTH_SHORT).show()
+        MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(MIME_TYPE)) { _, _ ->
+            savedCount.update { it + 1 }
+        }
+    }
 
     /** The song paths a playlist file lists, in playlist order. A file that is gone lists nothing. */
     fun entries(file: File): List<String> =

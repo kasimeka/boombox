@@ -419,6 +419,10 @@ private fun QueuesScreen(
 
 /** Shows a playlist's songs without changing playback. */
 private fun openPlaylist(activity: MainActivity, file: File) {
+    if (!file.isFile) {
+        PlaylistStore.forgetMissing(activity, file)
+        return
+    }
     activity.startFragment(PlaylistDetailFragment()) {
         putString(PlaylistDetailFragment.ARG_PATH, file.absolutePath)
     }
@@ -426,6 +430,10 @@ private fun openPlaylist(activity: MainActivity, file: File) {
 
 /** Plays a playlist's songs that are in the library, in file order or shuffled. */
 private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: File, shuffle: Boolean) {
+    if (!file.isFile) {
+        PlaylistStore.forgetMissing(activity, file)
+        return
+    }
     scope.launch {
         val songs = withContext(Dispatchers.IO) {
             val songsByPath = activity.reader.songListFlow.first()

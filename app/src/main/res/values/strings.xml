@@ -414,6 +414,8 @@
     <string name="playlist_saved">Saved as playlist</string>
     <!-- Toast when a queue could not be saved as a playlist -->
     <string name="playlist_not_saved">Could not save playlist</string>
+    <!-- Toast when a playlist was deleted outside the app and is opened or played -->
+    <string name="playlist_not_found">Playlist not found</string>
     <string name="queue_reordered">Queue reordered</string>
     <!-- Snackbar confirmation after reordering the queue -->
     <!-- Toast confirmation after shuffling the queue from the full player, which has no undo -->
