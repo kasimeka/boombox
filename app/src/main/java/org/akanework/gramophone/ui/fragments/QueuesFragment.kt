@@ -423,8 +423,9 @@ private fun openPlaylist(activity: MainActivity, file: File) {
         PlaylistStore.forgetMissing(activity, file)
         return
     }
-    activity.startFragment(PlaylistDetailFragment()) {
-        putString(PlaylistDetailFragment.ARG_PATH, file.absolutePath)
+    activity.startFragment(GeneralSubFragment()) {
+        putInt("Item", R.id.playlist_file)
+        putString("Path", file.absolutePath)
     }
 }
 

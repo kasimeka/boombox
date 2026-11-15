@@ -30,7 +30,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import org.akanework.gramophone.logic.getFile
+import org.akanework.gramophone.logic.queue.M3uImport
+import org.akanework.gramophone.logic.queue.PlaylistStore
+import java.io.File
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
@@ -179,6 +186,18 @@ class GeneralSubFragment : BaseFragment() {
                 rawOrderExposed = Sorter.Type.NaturalOrder
             }
 
+            R.id.playlist_file -> {
+                val file = File(bundle.getString("Path")!!)
+                title = flowOf(file.nameWithoutExtension)
+                source = flowOf(PlaylistStore.source(file))
+                itemList = flow {
+                    val songsByPath = mainActivity.reader.songListFlow.first()
+                        .associateBy { it.getFile()?.absolutePath }
+                    emit(M3uImport.resolve(PlaylistStore.entries(file)) { songsByPath[it] }.matches)
+                }
+                rawOrderExposed = Sorter.Type.NaturalOrder
+            }
+
             else -> throw IllegalArgumentException()
         }
 
@@ -199,7 +218,8 @@ class GeneralSubFragment : BaseFragment() {
                 sharedTitle,
                 itemList,
                 rawOrderExposed = rawOrderExposed,
-                isSubFragment = itemType,
+                // A playlist file is a dynamic playlist to the adapters, same as Favourites.
+                isSubFragment = if (itemType == R.id.playlist_file) R.id.playlist else itemType,
                 queueSource = source,
             )
 
