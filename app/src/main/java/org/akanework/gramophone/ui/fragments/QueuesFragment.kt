@@ -18,7 +18,8 @@
 package org.akanework.gramophone.ui.fragments
 
 import org.akanework.gramophone.logic.queue.M3uImport
-import org.akanework.gramophone.logic.queue.PlaylistStore
+import org.akanework.gramophone.experiments.playlists.PlaylistStore
+import org.akanework.gramophone.experiments.Experiments
 import org.akanework.gramophone.logic.queue.QueueDragReorder
 import org.akanework.gramophone.logic.queue.QueueExportRow
 import java.io.File
@@ -272,17 +273,18 @@ private fun QueuesScreen(
         controller.play()
     }
 
+    val playlistsOn = Experiments.playlists(activity)
     var playlistFiles by remember { mutableStateOf<List<PlaylistStore.Playlist>>(emptyList()) }
     // A playlist just saved from a queue, shown before the media scan indexes it.
     var pendingPlaylists by remember { mutableStateOf<List<PlaylistStore.Playlist>>(emptyList()) }
     val playlistRevision by PlaylistStore.revision.collectAsState()
     LaunchedEffect(playlistRevision) {
-        playlistFiles = withContext(Dispatchers.IO) { PlaylistStore.list(activity) }
+        if (playlistsOn) playlistFiles = withContext(Dispatchers.IO) { PlaylistStore.list(activity) }
         pendingPlaylists = emptyList()
     }
     val allPlaylists = (playlistFiles + pendingPlaylists.filter { p -> playlistFiles.none { it.file == p.file } })
         .sortedBy { it.title.lowercase() }
-    val playlistCollections = allPlaylists.map { playlist ->
+    val playlistCollections = if (!playlistsOn) emptyList() else allPlaylists.map { playlist ->
         PinnedQueueCollection(
             id = "playlist_${playlist.file.name}",
             title = playlist.title,
@@ -417,6 +419,7 @@ private fun QueuesScreen(
                 val queue = queues.getOrNull(from) ?: return@QueueListContent
                 scope.launch(Dispatchers.IO) { repository.moveQueue(queue.id, to) }
             },
+            showPlaylists = playlistsOn,
             onQueueConvertedToPlaylist = { queue, restore ->
                 scope.launch(Dispatchers.IO) {
                     val playlist = savePlaylist(activity, queue)
@@ -1074,7 +1077,7 @@ private fun QueueDetailScreen(
                         renameOpen = true
                     },
                 )
-                DropdownMenuItem(
+                if (Experiments.playlists(activity)) DropdownMenuItem(
                     text = { Text(stringResource(R.string.save_as_playlist)) },
                     onClick = {
                         actionsOpen = false

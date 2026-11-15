@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.clone
+import org.akanework.gramophone.experiments.Experiments
 import org.akanework.gramophone.logic.ui.UiExperiments
 import org.akanework.gramophone.logic.enableEdgeToEdgePaddingListener
 import org.akanework.gramophone.logic.setExpandedAppBarHeight
@@ -191,6 +192,8 @@ class ViewPagerFragment : BaseFragment() {
         MenuCompat.setGroupDividerEnabled(topAppBar.menu, true)
         topAppBar.menu.findItem(R.id.huge_forehead)?.isChecked =
             UiExperiments.hugeForehead(requireContext())
+        topAppBar.menu.findItem(R.id.import_playlist)?.isVisible =
+            !Experiments.playlists(requireContext())
 
         topAppBar.setOnMenuItemClickListener { it ->
             val activity = requireActivity() as MainActivity

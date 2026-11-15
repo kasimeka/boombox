@@ -132,6 +132,7 @@ fun QueueListContent(
     onShuffleQueue: ((Queue) -> Unit)? = null,
     onMoveQueue: ((from: Int, to: Int) -> Unit)? = null,
     onQueueConvertedToPlaylist: ((queue: Queue, restore: () -> Unit) -> Unit)? = null,
+    showPlaylists: Boolean = false,
 ) {
     Box(modifier.fillMaxSize()) {
         if (queues.isEmpty() && pinnedCollections.isEmpty()) {
@@ -142,8 +143,10 @@ fun QueueListContent(
             )
         } else {
             var pinnedExpanded by rememberSaveable { mutableStateOf(false) }
-            val pinnedRowCount = if (pinnedExpanded) pinnedCollections.size else 0
-            val headerItemCount = if (pinnedCollections.isNotEmpty()) pinnedRowCount + 2 else 0
+            val sectionExpanded = !showPlaylists || pinnedExpanded
+            val pinnedRowCount = if (sectionExpanded) pinnedCollections.size else 0
+            val headerItemCount =
+                if (pinnedCollections.isNotEmpty()) pinnedRowCount + (if (showPlaylists) 2 else 1) else 0
             val scope = rememberCoroutineScope()
             var queueKeySeed by remember { mutableLongStateOf(0L) }
             var displayQueues by remember {
@@ -250,13 +253,15 @@ fun QueueListContent(
                     .nestedScroll(rememberNestedScrollInteropConnection()),
             ) {
                 if (pinnedCollections.isNotEmpty()) {
-                    item(key = "pinned_toggle") {
-                        PinnedSectionToggle(
-                            expanded = pinnedExpanded,
-                            onToggle = { pinnedExpanded = !pinnedExpanded },
-                        )
+                    if (showPlaylists) {
+                        item(key = "pinned_toggle") {
+                            PinnedSectionToggle(
+                                expanded = pinnedExpanded,
+                                onToggle = { pinnedExpanded = !pinnedExpanded },
+                            )
+                        }
                     }
-                    if (pinnedExpanded) {
+                    if (sectionExpanded) {
                         items(items = pinnedCollections, key = { "pinned_${it.id}" }) { collection ->
                             Box(Modifier.animateItem()) {
                                 PinnedCollectionRow(item = collection)
@@ -264,7 +269,14 @@ fun QueueListContent(
                         }
                     }
                     item(key = "pinned_divider") {
-                        PinnedDropHint(active = dragState.overPlaylistZone)
+                        if (showPlaylists) {
+                            PinnedDropHint(active = dragState.overPlaylistZone)
+                        } else {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                            )
+                        }
                     }
                 }
                 if (displayQueues.isEmpty()) {
@@ -340,15 +352,14 @@ fun QueueListContent(
                                 onDrag = { change, dragAmount ->
                                     change.consume()
                                     onDragDelta(dragAmount.y)
-                                    dragState.overPlaylistZone = onQueueConvertedToPlaylist != null &&
-                                        item.queue.id != activeQueueId &&
+                                    dragState.overPlaylistZone = showPlaylists && onQueueConvertedToPlaylist != null &&
                                         isAboveSeparator(item.key, dragState.dragOffset)
                                 },
                                 onDragEnd = {
                                     val key = dragState.draggingKey
                                     val startIndex = dragState.dragStartIndex
                                     dragState.overPlaylistZone = false
-                                    val toPlaylist = key != null && onQueueConvertedToPlaylist != null &&
+                                    val toPlaylist = key != null && showPlaylists && onQueueConvertedToPlaylist != null &&
                                         isAboveSeparator(key, dragState.dragOffset)
                                     dragState.draggingKey = null
                                     dragState.dragStartIndex = null

@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.akanework.gramophone.logic.getFile
 import org.akanework.gramophone.logic.queue.M3uImport
-import org.akanework.gramophone.logic.queue.PlaylistStore
+import org.akanework.gramophone.experiments.playlists.PlaylistStore
 import java.io.File
 import android.widget.EditText
 import android.widget.Toast

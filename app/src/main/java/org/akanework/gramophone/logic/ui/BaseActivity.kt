@@ -23,16 +23,24 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import org.akanework.gramophone.R
+import org.akanework.gramophone.experiments.Experiments
 import org.akanework.gramophone.logic.getBooleanStrict
 
 open class BaseActivity : AppCompatActivity() {
     lateinit var prefs: SharedPreferences
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == "pureDark" && (resources.configuration.uiMode and
-                    Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        ) {
-            recreate()
+        when (key) {
+            "pureDark" -> if ((resources.configuration.uiMode and
+                        Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            ) reloadUi()
+            UiExperiments.HUGE_FOREHEAD, UiExperiments.TABS_AT_BOTTOM, Experiments.PLAYLISTS ->
+                reloadUi()
         }
+    }
+
+    /** The only place a settings change rebuilds the UI, so every reload looks the same. */
+    fun reloadUi() {
+        recreate()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
