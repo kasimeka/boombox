@@ -132,6 +132,7 @@ import java.io.File
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.max
+import kotlin.math.min
 
 fun Player.playOrPause() {
     if (playbackState == Player.STATE_ENDED) {
@@ -532,6 +533,11 @@ fun MediaController.editQueue(
             customExtras.putInt("position", position)
         }
     )
+
+/** Insert [items] right after the playing item. Every play next action goes through here. */
+fun MediaController.playNext(items: List<MediaItem>) {
+    addMediaItems(min(currentMediaItemIndex + 1, mediaItemCount), items)
+}
 
 /** Reorder a durable queue by identity. */
 fun MediaController.moveQueueRow(queueUuid: UUID, from: Int, to: Int): Boolean =

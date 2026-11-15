@@ -158,6 +158,7 @@ import org.akanework.gramophone.logic.expandedAppBarHeight
 import org.akanework.gramophone.logic.deduplicateQueue
 import org.akanework.gramophone.logic.gramophoneApplication
 import org.akanework.gramophone.logic.moveQueueRow
+import org.akanework.gramophone.logic.playNext
 import org.akanework.gramophone.logic.playQueue
 import org.akanework.gramophone.logic.queue.Queue
 import org.akanework.gramophone.logic.queue.QueueEditOperation
@@ -518,11 +519,24 @@ internal data class DragRow(val key: Long, val encoded: String)
  * Keeps each row's key across a repository refresh, matching rows by content in order, so list
  * animations see a removal as a removal and an undo as an insertion. Only new rows get new keys.
  */
+/**
+ * Keeps each row's key when the rows change by one insertion or removal: rows before and after
+ * the change keep their keys, so a duplicate song never takes over another row's key.
+ */
 internal fun reuseRowKeys(old: List<DragRow>, new: List<String>, nextKey: () -> Long): List<DragRow> {
-    val available = old.groupByTo(HashMap(), { it.encoded }, { it.key })
-    return new.map { encoded ->
-        val keys = available[encoded]
-        DragRow(if (keys.isNullOrEmpty()) nextKey() else keys.removeAt(0), encoded)
+    var prefix = 0
+    while (prefix < old.size && prefix < new.size && old[prefix].encoded == new[prefix]) prefix++
+    var suffix = 0
+    while (suffix < old.size - prefix && suffix < new.size - prefix &&
+        old[old.size - 1 - suffix].encoded == new[new.size - 1 - suffix]
+    ) suffix++
+    return new.mapIndexed { index, encoded ->
+        val oldIndex = when {
+            index < prefix -> index
+            index >= new.size - suffix -> old.size - (new.size - index)
+            else -> -1
+        }
+        DragRow(if (oldIndex >= 0) old[oldIndex].key else nextKey(), encoded)
     }
 }
 
@@ -787,12 +801,6 @@ private fun QueueDetailScreen(
                     activity.getPlayer()?.undoQueueEdit(loadedQueue.id)
                 }
             }
-        }
-    }
-
-    fun playNext(position: Int) {
-        scope.launch(Dispatchers.IO) {
-            activity.getPlayer()?.editQueue(loadedQueue.id, QueueEditOperation.PLAY_NEXT, position)
         }
     }
 
@@ -1281,7 +1289,7 @@ private fun QueueDetailScreen(
                             modifier = if (isDragging) Modifier else Modifier.animateItem(),
                             isCurrent = isActive && currentPlayingKey == row.key,
                             isPlaying = isActive && playerState.isPlaying,
-                            canPlayNext = QueueOrderEditor.canPlayNext(displayRows.size, anchor, index),
+                            canPlayNext = QueuePlaybackRules.playNextAvailable(activeQueue),
                             highlighted = highlightRowKey == row.key,
                             onHighlightEnd = {
                                 if (highlightRowKey == row.key) highlightRowKey = null
@@ -1297,7 +1305,9 @@ private fun QueueDetailScreen(
                                     }
                                 }
                             },
-                            onPlayNext = { playNext(index) },
+                            onPlayNext = {
+                                decoded?.let { activity.getPlayer()?.playNext(listOf(it)) }
+                            },
                             onAddToQueue = { addToQueue(encoded) },
                             onGoToAlbum = { decoded?.let(::goToAlbum) },
                             onGoToArtist = { decoded?.let(::goToArtist) },

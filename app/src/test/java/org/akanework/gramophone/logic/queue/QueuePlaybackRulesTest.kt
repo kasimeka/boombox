@@ -33,10 +33,10 @@ class QueuePlaybackRulesTest {
     ) = QueuePlaybackState(rowCount, bookmark, hasBeenPlayed, isActive, isPlaying)
 
     @Test
-    fun libraryPlayNextNeedsAnActiveQueue() {
-        assertFalse(QueuePlaybackRules.libraryPlayNextAvailable(null))
+    fun playNextNeedsAnActiveQueue() {
+        assertFalse(QueuePlaybackRules.playNextAvailable(null))
         assertTrue(
-            QueuePlaybackRules.libraryPlayNextAvailable(
+            QueuePlaybackRules.playNextAvailable(
                 Queue.create("Active", null, rows = listOf("a"), now = 1L)
             )
         )

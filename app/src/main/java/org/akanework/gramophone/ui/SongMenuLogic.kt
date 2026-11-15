@@ -35,6 +35,7 @@ import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.getFile
 import org.akanework.gramophone.logic.gramophoneApplication
 import org.akanework.gramophone.logic.mediaStoreId
+import org.akanework.gramophone.logic.playNext
 import org.akanework.gramophone.logic.queue.QueuePlaybackRules
 import org.akanework.gramophone.logic.utils.MediaRowCodec
 import org.akanework.gramophone.ui.components.AddToQueueSheet
@@ -53,7 +54,7 @@ data class SongMenuContext(
 ) {
     companion object {
         fun forLibrary(activity: MainActivity): SongMenuContext = SongMenuContext(
-            canPlayNext = QueuePlaybackRules.libraryPlayNextAvailable(
+            canPlayNext = QueuePlaybackRules.playNextAvailable(
                 activity.gramophoneApplication.queueRepository.lastActiveQueue.value
             ),
         )
@@ -106,11 +107,7 @@ object SongMenuLogic {
     ): Boolean = when (itemId) {
         R.id.play_next -> {
             if (!menuContext.canPlayNext) return true
-            val mediaController = activity.getPlayer()
-            mediaController?.addMediaItem(
-                mediaController.currentMediaItemIndex + 1,
-                item,
-            )
+            activity.getPlayer()?.playNext(listOf(item))
             true
         }
 

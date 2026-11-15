@@ -21,6 +21,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.gramophoneApplication
+import org.akanework.gramophone.logic.playNext
 import org.akanework.gramophone.logic.queue.QueuePlaybackRules
 import org.akanework.gramophone.logic.utils.MediaRowCodec
 import org.akanework.gramophone.ui.MainActivity
@@ -64,25 +65,21 @@ class DateAdapter(
     override fun onMenu(item: Date, popupMenu: PopupMenu) {
         popupMenu.inflate(R.menu.more_menu_less)
         popupMenu.menu.findItem(R.id.play_next).isVisible =
-            QueuePlaybackRules.libraryPlayNextAvailable(
+            QueuePlaybackRules.playNextAvailable(
                 mainActivity.gramophoneApplication.queueRepository.lastActiveQueue.value
             )
 
         popupMenu.setOnMenuItemClickListener { it1 ->
             when (it1.itemId) {
                 R.id.play_next -> {
-                    if (!QueuePlaybackRules.libraryPlayNextAvailable(
+                    if (!QueuePlaybackRules.playNextAvailable(
                             mainActivity.gramophoneApplication.queueRepository
                                 .lastActiveQueue.value
                         )
                     ) {
                         return@setOnMenuItemClickListener true
                     }
-                    val mediaController = mainActivity.getPlayer()
-                    mediaController?.addMediaItems(
-                        mediaController.currentMediaItemIndex + 1,
-                        item.songList,
-                    )
+                    mainActivity.getPlayer()?.playNext(item.songList)
                     true
                 }
 

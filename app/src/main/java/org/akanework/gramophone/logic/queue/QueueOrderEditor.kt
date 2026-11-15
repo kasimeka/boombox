@@ -23,7 +23,6 @@ import kotlin.random.Random
  * Operations the queue row menu can apply to a queue.
  */
 enum class QueueEditOperation {
-    PLAY_NEXT,
     REMOVE,
     MOVE,
 }
@@ -42,37 +41,6 @@ sealed interface QueueEditResult {
  * songs therefore stay distinct because they have different identities.
  */
 object QueueOrderEditor {
-    /**
-     * Play next is only meaningful when the selected row is neither the current row nor the row
-     * that already follows it.
-     */
-    fun canPlayNext(size: Int, currentPosition: Int?, selectedPosition: Int): Boolean {
-        if (currentPosition == null) return false
-        if (currentPosition !in 0..<size) return false
-        if (selectedPosition !in 0..<size) return false
-        return selectedPosition != currentPosition && selectedPosition != currentPosition + 1
-    }
-
-    /**
-     * Move [selectedPosition] to immediately after [currentPosition] in the displayed order.
-     * The selected row keeps its identity, so nothing is duplicated.
-     */
-    fun playNext(
-        order: List<Int>,
-        currentPosition: Int?,
-        selectedPosition: Int,
-    ): QueueEditResult {
-        if (!canPlayNext(order.size, currentPosition, selectedPosition)) return QueueEditResult.NoOp
-
-        val newOrder = order.toMutableList()
-        val row = newOrder.removeAt(selectedPosition)
-        val currentAfterRemoval =
-            if (selectedPosition < currentPosition!!) currentPosition - 1 else currentPosition
-        val targetPosition = currentAfterRemoval + 1
-        newOrder.add(targetPosition, row)
-        return QueueEditResult.Applied(newOrder)
-    }
-
     /**
      * Shuffle everything is only meaningful when there is an anchor row and at least one other row
      * to reorder after it.

@@ -1159,15 +1159,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
 
         val mediaItems = activeQueueMediaItems(player)
         when (operation) {
-            QueueEditOperation.PLAY_NEXT -> {
-                val result = QueueOrderEditor.playNext(order, target.currentPosition(), position)
-                if (result !is QueueEditResult.Applied) return false
-                lastQueueEditUndo = QueueEditUndoState(
-                    queueUuid, operation, order, mediaItems
-                )
-                target.applyDisplayedOrder(result.order)
-            }
-
             QueueEditOperation.REMOVE -> {
                 val result = QueueOrderEditor.remove(order, position)
                 if (result !is QueueEditResult.Applied) return false
@@ -1218,9 +1209,6 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
             val order = target.displayedOrder()
             if (position !in order.indices) return@mutate current
             val result = when (operation) {
-                QueueEditOperation.PLAY_NEXT ->
-                    QueueOrderEditor.playNext(order, target.currentPosition(), position)
-
                 QueueEditOperation.REMOVE -> QueueOrderEditor.remove(order, position)
                 QueueEditOperation.MOVE -> QueueOrderEditor.move(order, position, to)
             }
@@ -1278,7 +1266,7 @@ class GramophonePlaybackService : MediaLibraryService(), MediaSessionService.Lis
         val target = PlayerQueueOrderTarget(player)
         val restored = when (undo.operation) {
             // Restoring a reorder reads the playlist, so it must follow any change still applying.
-            QueueEditOperation.PLAY_NEXT, QueueEditOperation.MOVE -> {
+            QueueEditOperation.MOVE -> {
                 target.restoreDisplayedOrder(undo.displayedOrder, undo.mediaItems)
             }
 

@@ -41,26 +41,6 @@ class StoredQueueOrderTargetTest {
     }
 
     @Test
-    fun playNextOnAnInactiveQueueUsesTheBookmarkAsTheAnchor() = runBlocking {
-        val (repository, queue) = repositoryWithBookmark(row = 1)
-
-        val stored = repository.mutate(queue.id, now = 3L) { current ->
-            val target = StoredQueueOrderTarget(current)
-            val result = QueueOrderEditor.playNext(
-                target.displayedOrder(),
-                target.currentPosition(),
-                selectedPosition = 3
-            ) as QueueEditResult.Applied
-            target.applyDisplayedOrder(result.order)
-            target.queue
-        }
-
-        assertEquals(listOf("row-a", "row-b", "row-d", "row-c"), stored?.rows)
-        assertEquals(1, stored?.bookmark?.row)
-        assertEquals(1_500L, stored?.bookmark?.positionMs)
-    }
-
-    @Test
     fun removingTheBookmarkedRowClampsTheStoredBookmark() = runBlocking {
         val (repository, queue) = repositoryWithBookmark(row = 2)
 

@@ -35,9 +35,9 @@ class QueueOrderTargetTest {
     )
 
     @Test
-    fun playNextReordersMediaItems() {
+    fun moveReordersMediaItems() {
         val before = queue.displayedOrder()
-        val result = QueueOrderEditor.playNext(before, queue.currentPosition(), 4)
+        val result = QueueOrderEditor.move(before, 4, 1)
             as QueueEditResult.Applied
 
         queue.applyDisplayedOrder(result.order)
@@ -49,10 +49,10 @@ class QueueOrderTargetTest {
     }
 
     @Test
-    fun undoAfterPlayNextRestoresCapturedOrder() {
+    fun undoAfterMoveRestoresCapturedOrder() {
         val capturedOrder = queue.displayedOrder()
         val capturedItems = queue.underlyingOrder()
-        val result = QueueOrderEditor.playNext(capturedOrder, queue.currentPosition(), 4)
+        val result = QueueOrderEditor.move(capturedOrder, 4, 1)
             as QueueEditResult.Applied
         queue.applyDisplayedOrder(result.order)
 
@@ -66,7 +66,7 @@ class QueueOrderTargetTest {
     fun undoAfterPlaybackAdvancedLeavesPlaybackWhereItIs() {
         val capturedOrder = queue.displayedOrder()
         val capturedItems = queue.underlyingOrder()
-        val result = QueueOrderEditor.playNext(capturedOrder, queue.currentPosition(), 4)
+        val result = QueueOrderEditor.move(capturedOrder, 4, 1)
             as QueueEditResult.Applied
         queue.applyDisplayedOrder(result.order)
         // The moved row has already started; undo must not rewind it.

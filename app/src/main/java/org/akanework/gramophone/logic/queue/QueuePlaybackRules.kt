@@ -114,7 +114,7 @@ object QueuePlaybackRules {
      * A library song menu offers Play next only while a queue is loaded to anchor the insert.
      * With no active queue the action is hidden rather than implying a destination.
      */
-    fun libraryPlayNextAvailable(activeQueue: Queue?): Boolean = activeQueue != null
+    fun playNextAvailable(activeQueue: Queue?): Boolean = activeQueue != null
 
     /** The queue listed after [activeId] in [ordered], or null for the last queue or an unlisted one. */
     fun nextQueueAfter(ordered: List<Queue>, activeId: UUID): Queue? {

@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
 import org.akanework.gramophone.logic.getFile
 import org.akanework.gramophone.logic.gramophoneApplication
+import org.akanework.gramophone.logic.playNext
 import org.akanework.gramophone.logic.queue.QueuePlaybackRules
 import org.akanework.gramophone.logic.requireMediaStoreId
 import org.akanework.gramophone.logic.utils.MediaRowCodec
@@ -91,7 +92,7 @@ class AlbumAdapter(
     override fun onMenu(item: Album, popupMenu: PopupMenu) {
         popupMenu.inflate(R.menu.more_menu)
         popupMenu.menu.iterator().forEach {
-            it.isVisible = (it.itemId == R.id.play_next && QueuePlaybackRules.libraryPlayNextAvailable(
+            it.isVisible = (it.itemId == R.id.play_next && QueuePlaybackRules.playNextAvailable(
                 mainActivity.gramophoneApplication.queueRepository.lastActiveQueue.value
             )) || it.itemId == R.id.add_to_queue
                     || it.itemId == R.id.delete
@@ -99,18 +100,14 @@ class AlbumAdapter(
         popupMenu.setOnMenuItemClickListener { it1 ->
             when (it1.itemId) {
                 R.id.play_next -> {
-                    if (!QueuePlaybackRules.libraryPlayNextAvailable(
+                    if (!QueuePlaybackRules.playNextAvailable(
                             mainActivity.gramophoneApplication.queueRepository
                                 .lastActiveQueue.value
                         )
                     ) {
                         return@setOnMenuItemClickListener true
                     }
-                    val mediaController = mainActivity.getPlayer()
-                    mediaController?.addMediaItems(
-                        mediaController.currentMediaItemIndex + 1,
-                        item.songList,
-                    )
+                    mainActivity.getPlayer()?.playNext(item.songList)
                 }
 
                 R.id.add_to_queue -> {
