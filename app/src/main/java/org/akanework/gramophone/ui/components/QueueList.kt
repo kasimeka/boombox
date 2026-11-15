@@ -18,6 +18,7 @@
 package org.akanework.gramophone.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
@@ -49,9 +50,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
@@ -126,7 +129,9 @@ fun QueueListContent(
                 modifier = Modifier.align(Alignment.Center),
             )
         } else {
-            val headerItemCount = if (pinnedCollections.isNotEmpty()) pinnedCollections.size + 1 else 0
+            var pinnedExpanded by rememberSaveable { mutableStateOf(true) }
+            val pinnedRowCount = if (pinnedExpanded) pinnedCollections.size else 0
+            val headerItemCount = if (pinnedCollections.isNotEmpty()) pinnedRowCount + 1 else 0
             val scope = rememberCoroutineScope()
             var queueKeySeed by remember { mutableLongStateOf(0L) }
             var displayQueues by remember {
@@ -226,13 +231,15 @@ fun QueueListContent(
                     .nestedScroll(rememberNestedScrollInteropConnection()),
             ) {
                 if (pinnedCollections.isNotEmpty()) {
-                    items(items = pinnedCollections, key = { "pinned_${it.id}" }) { collection ->
-                        PinnedCollectionRow(item = collection)
+                    if (pinnedExpanded) {
+                        items(items = pinnedCollections, key = { "pinned_${it.id}" }) { collection ->
+                            PinnedCollectionRow(item = collection)
+                        }
                     }
                     item(key = "pinned_divider") {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                        PinnedSectionToggle(
+                            expanded = pinnedExpanded,
+                            onToggle = { pinnedExpanded = !pinnedExpanded },
                         )
                     }
                 }
@@ -341,6 +348,29 @@ fun QueueListContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PinnedSectionToggle(expanded: Boolean, onToggle: () -> Unit) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, label = "pinnedToggle")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_expand_more),
+            contentDescription = null,
+            modifier = Modifier.rotate(rotation),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
