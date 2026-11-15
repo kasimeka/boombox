@@ -18,6 +18,7 @@
 package org.akanework.gramophone.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -108,6 +110,7 @@ private class QueueListDragState {
     var dragOffset by mutableFloatStateOf(0f)
     var exitingKey by mutableStateOf<Long?>(null)
     var exitOffset by mutableFloatStateOf(0f)
+    var overPlaylistZone by mutableStateOf(false)
 }
 
 /**
@@ -260,10 +263,7 @@ fun QueueListContent(
                         }
                     }
                     item(key = "pinned_divider") {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                        )
+                        PinnedDropHint(active = dragState.overPlaylistZone)
                     }
                 }
                 if (displayQueues.isEmpty()) {
@@ -339,10 +339,14 @@ fun QueueListContent(
                                 onDrag = { change, dragAmount ->
                                     change.consume()
                                     onDragDelta(dragAmount.y)
+                                    dragState.overPlaylistZone = onQueueConvertedToPlaylist != null &&
+                                        item.queue.id != activeQueueId &&
+                                        isAboveSeparator(item.key, dragState.dragOffset)
                                 },
                                 onDragEnd = {
                                     val key = dragState.draggingKey
                                     val startIndex = dragState.dragStartIndex
+                                    dragState.overPlaylistZone = false
                                     val toPlaylist = key != null && onQueueConvertedToPlaylist != null &&
                                         isAboveSeparator(key, dragState.dragOffset)
                                     dragState.draggingKey = null
@@ -364,6 +368,7 @@ fun QueueListContent(
                                     onMoveQueue(startIndex, to)
                                 },
                                 onDragCancel = {
+                                    dragState.overPlaylistZone = false
                                     dragState.draggingKey = null
                                     dragState.dragStartIndex = null
                                     dragState.dragStartQueues = emptyList()
@@ -429,6 +434,26 @@ private fun PinnedSectionToggle(expanded: Boolean, onToggle: () -> Unit) {
             modifier = Modifier.rotate(rotation),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+@Composable
+private fun PinnedDropHint(active: Boolean) {
+    val lineColor by animateColorAsState(
+        if (active) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        label = "dropLine",
+    )
+    val labelAlpha by animateFloatAsState(if (active) 1f else 0f, label = "dropLabel")
+    // Fixed height, so showing the label never moves the queues under a dragged row.
+    Box(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 20.dp)) {
+        Text(
+            text = stringResource(R.string.release_to_save_playlist),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.TopCenter).graphicsLayer { alpha = labelAlpha },
+        )
+        HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter), color = lineColor)
     }
 }
 
