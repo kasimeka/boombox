@@ -136,6 +136,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ShareCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -1397,9 +1398,10 @@ private fun QueueDetailScreen(
             onDismiss = { deleteOpen = false },
             onConfirm = {
                 deleteOpen = false
-                scope.launch {
+                // Leave first, so the page never shows the queue as gone. The delete outlives the page.
+                activity.supportFragmentManager.popBackStack()
+                activity.lifecycleScope.launch {
                     deleteQueueFromUi(activity, repository, loadedQueue.id)
-                    activity.supportFragmentManager.popBackStack()
                 }
             },
         )
