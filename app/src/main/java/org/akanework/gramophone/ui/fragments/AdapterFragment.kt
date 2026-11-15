@@ -145,8 +145,7 @@ class AdapterFragment : BaseFragment() {
             R.id.artists -> ArtistAdapter(this)
             R.id.genres -> GenreAdapter(this)
             R.id.dates -> DateAdapter(this)
-            R.id.folders -> DetailedFolderAdapter(this, false, savedInstanceState)
-            R.id.detailed_folders -> DetailedFolderAdapter(this, true, savedInstanceState)
+            R.id.folders -> DetailedFolderAdapter(this, savedInstanceState)
             R.id.playlists -> throw IllegalArgumentException("playlists tab is queue-only")
             -1, null -> throw IllegalArgumentException("unset ID value")
             else -> throw IllegalArgumentException("invalid ID value")
@@ -164,7 +163,6 @@ class AdapterFragment : BaseFragment() {
             R.id.genres -> R.string.category_genres
             R.id.dates -> R.string.category_dates
             R.id.folders -> R.string.folders
-            R.id.detailed_folders -> R.string.folders
             R.id.playlists -> R.string.category_queues
             -1, null -> throw IllegalArgumentException("unset ID value")
             else -> throw IllegalArgumentException("invalid ID value")

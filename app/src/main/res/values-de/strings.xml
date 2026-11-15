@@ -77,7 +77,6 @@
     <string name="settings_lyrics_bold">Fettgedruckte Liedtexte</string>
     <string name="settings_player_options">Audio</string>
     <string name="settings_appearance_summary">Erscheinungsbild der Anwendung, Farbschemen</string>
-    <string name="filesystem">Dateisystem</string>
     <string name="settings_behavior_summary">Filter, Startverhalten</string>
     <string name="settings_lyrics_configuration_summary">Aussehen von Liedtexten konfigurieren</string>
     <string name="settings_category_full_player">Vollbildmodus</string>

@@ -96,7 +96,6 @@
     <string name="no_lyric_found">Nije pronađen nijedan tekst pjesme</string>
     <string name="dialog_disc_number">Broj diska</string>
     <string name="unknown_title">Nepoznat naslov</string>
-    <string name="filesystem">Datotečni sustav</string>
     <string name="dialog_mime">MIME vrsta</string>
     <string name="dialog_duration">Trajanje</string>
     <string name="settings_title_center">Centrirani naslov</string>

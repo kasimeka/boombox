@@ -60,7 +60,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class DetailedFolderAdapter(
     private val fragment: Fragment,
-    val isDetailed: Boolean,
     savedInstanceState: Bundle?
 ) : AdapterFragment.BaseInterface<RecyclerView.ViewHolder>() {
     companion object {
@@ -106,8 +105,7 @@ class DetailedFolderAdapter(
     private var fileNodePath = MutableStateFlow<List<String>?>(savedInstanceState
         ?.getStringArrayList("Path"))
     val qTitle = fileNodePath.map { it?.lastOrNull() ?: "/" }
-    private val liveData = if (isDetailed) mainActivity.reader.folderStructureFlow
-    else mainActivity.reader.shallowFolderFlow
+    private val liveData = mainActivity.reader.shallowFolderFlow
     private val dataFlow = liveData.combineTransform(fileNodePath) { root, path ->
         var item: FileNode? = null
         if (path != null) {
@@ -120,14 +118,7 @@ class DetailedFolderAdapter(
         // 2. item is null because folder no longer exists on disk, reset to default path
         if (item == null) {
             item = root
-            var newPath = mutableListOf<String>()
-            if (isDetailed) {
-                // Enter as many single-child-only folders as we can starting from root
-                while (item!!.folderList.size == 1 && item.songList.isEmpty()) {
-                    newPath.add(item.folderList.keys.first())
-                    item = item.folderList.values.first()
-                }
-            }
+            val newPath = mutableListOf<String>()
             // This may race with user click if a folder was deleted while a user clicks.
             fileNodePath.emitOrDie(newPath)
             return@combineTransform // we will run again with new path soon

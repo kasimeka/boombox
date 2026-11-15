@@ -104,7 +104,6 @@
     <string name="settings_lyric">Paroles</string>
     <string name="settings_category_links">Liens</string>
     <string name="settings_lyrics_center">Alignement au centre</string>
-    <string name="filesystem">Système de fichiers</string>
     <string name="settings_appearance_summary">Apparence de l\'application, thème</string>
     <string name="dialog_duration">Durée</string>
     <string name="dialog_disc_number">Numéro de disque</string>

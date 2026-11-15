@@ -21,7 +21,6 @@
     <string name="no_lyric_found">Nenhuma letra encontrada</string>
     <string name="dialog_disc_number">Número do disco</string>
     <string name="unknown_title">Título desconhecido</string>
-    <string name="filesystem">Ficheiros</string>
     <string name="settings_lyric">Letras</string>
     <string name="settings_lyrics_configuration">Configurar letras</string>
     <string name="settings_lyrics_configuration_summary">Configurar a aparência das letras</string>

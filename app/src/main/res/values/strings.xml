@@ -235,7 +235,6 @@
     <!-- Used in place of the song name if the song name can't be found unexpectedly -->
     <string name="unknown_title">Unknown title</string>
     <!-- Tab on home screen showing a hierarchical folder list -->
-    <string name="filesystem">Filesystem</string>
     <!-- Shown next to song's MIME type (like "audio/mpeg") in detail UI -->
     <string name="dialog_mime">MIME type</string>
     <!-- Shown next to song's duration (like "5:37") in detail UI -->
@@ -1221,11 +1220,11 @@ supporting local search. This string is displayed in the search bar when using B
     <string name="picker_activity">Choose music track</string>
 
     <!-- Settings category in appearance settings relating to specific tabs on home page -->
-    <string name="settings_preference_category_folders_filesystem"><![CDATA[Folder & filesystem tabs]]></string>
-    <!-- Toggle in the "folder & filesystem tabs" category in appearance settings. Title -->
+    <string name="settings_preference_category_folders_filesystem"><![CDATA[Folder tab]]></string>
+    <!-- Toggle in the "folder tab" category in appearance settings. Title -->
     <string name="show_file_names">Show file names</string>
-    <!-- Toggle in the "folder & filesystem tabs" category in appearance settings. Subtext -->
-    <string name="show_file_names_summary">Show file names in the place of song names in the folder and filesystem tabs</string>
+    <!-- Toggle in the "folder tab" category in appearance settings. Subtext -->
+    <string name="show_file_names_summary">Show file names in the place of song names in the folder tab</string>
 
     <!-- Slider in lyric settings to change font size for lyrics -->
     <string name="settings_font_size">Font size</string>

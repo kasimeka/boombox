@@ -64,7 +64,6 @@
     <string name="settings_appearance_summary">ظاهر برنامه، حالت‌های زمینه</string>
     <string name="settings_title_center">نام در مرکز</string>
     <string name="dialog_duration">مدت زمان</string>
-    <string name="filesystem">پرونده‌ها</string>
     <string name="dialog_mime">گونۀ mime</string>
     <string name="settings_player_ui">رابط کاربری پخش‌کننده</string>
     <string name="settings_title_center_summary">بکاربردن نام وسط‌چین در پخش کنندۀ کامل</string>

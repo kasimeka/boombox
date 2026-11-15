@@ -79,7 +79,6 @@
     <string name="dialog_disc_number">Số đĩa</string>
     <string name="unknown_title">Tên bài hát chưa biết</string>
     <string name="dialog_mime">Kiểu MIME</string>
-    <string name="filesystem">Tệp hệ thống</string>
     <string name="dialog_duration">Thời lượng</string>
     <string name="settings_title_center">Căn tên bài hát ở giữa</string>
     <string name="settings_title_center_summary">Hiện tên bài hát ở giữa trong trình phát đầy đủ</string>

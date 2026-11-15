@@ -81,7 +81,6 @@
     <string name="album_artist">Wykonawca albumu</string>
     <string name="sort_by_album">Album</string>
     <string name="category_albums">Albumy</string>
-    <string name="filesystem">System plików</string>
     <string name="refreshed_songs">Odśwież %1$d utworów</string>
     <string name="dark">Ciemny</string>
     <string name="settings_appearance_summary">Wygląd aplikacji, tryby motywów</string>

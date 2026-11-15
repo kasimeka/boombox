@@ -92,7 +92,6 @@
     <string name="settings_title_center">Títol centrat</string>
     <string name="settings_title_center_summary">Utilitza el títol centrat al reproductor complet</string>
     <string name="settings_player_ui">IU del reproductor</string>
-    <string name="filesystem">Sistema de fitxers</string>
     <string name="settings_player_ui_summary">IU del reproductor complet, lletres</string>
     <string name="settings_appearance_summary">Aparença de l\'aplicació, modes dels temes</string>
     <string name="settings_about_app">Quant a</string>

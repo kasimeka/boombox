@@ -75,7 +75,6 @@
     <string name="settings_appearance_summary">Tampilan aplikasi, mode tema</string>
     <string name="settings_behavior_summary">Filter, perilaku peluncuran</string>
     <string name="dialog_duration">Durasi</string>
-    <string name="filesystem">Sistem berkas</string>
     <string name="settings_library">Pustaka</string>
     <string name="settings_title_center_summary">Gunakan judul terpusat untuk pemutar penuh</string>
     <string name="dialog_mime">Tipe MIME</string>

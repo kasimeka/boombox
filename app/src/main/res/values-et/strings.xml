@@ -81,7 +81,6 @@
     <string name="settings_package_type">Tarkvarapaketi tüüp</string>
     <string name="unknown_title">Teadmata pealkiri</string>
     <string name="no_lyric_found">Laulusõnu ei leidu</string>
-    <string name="filesystem">Failisüsteem</string>
     <string name="dialog_mime">MIME-tüüp</string>
     <string name="dialog_duration">Kestus</string>
     <string name="dialog_disc_number">Plaadi number</string>

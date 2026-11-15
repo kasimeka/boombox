@@ -88,7 +88,6 @@
     <string name="no_lyric_found">ບໍ່ພົບເນື້ອເພງ</string>
     <string name="dialog_disc_number">ລຳດັບແຜ່ນ</string>
     <string name="unknown_title">ບໍ່ຮູ້ຈັກຊື່ເພງ</string>
-    <string name="filesystem">ລະບົບໄຟລ໌</string>
     <string name="dialog_mime">ປະເພດ MIME</string>
     <string name="dialog_duration">ໄລຍະເວລາ</string>
     <string name="settings_title_center">ຊື່ເພງຢູ່ເຄິ່ງກາງ</string>

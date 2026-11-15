@@ -69,7 +69,6 @@
     <string name="album_artist">Álbum do artista</string>
     <string name="sort_by_album">Álbum</string>
     <string name="category_albums">Álbuns</string>
-    <string name="filesystem">Arquivos</string>
     <string name="refreshed_songs">%1$d música(s) atualizada(s)</string>
     <string name="dark">Escuro</string>
     <string name="settings_appearance_summary">Aparência do aplicativo, temas</string>

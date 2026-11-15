@@ -93,7 +93,6 @@
     <string name="dialog_disc_number">Номер диска</string>
     <string name="unknown_title">Неизвестное название</string>
     <string name="dialog_mime">MIME-тип</string>
-    <string name="filesystem">Файлы</string>
     <string name="dialog_duration">Длительность</string>
     <string name="settings_title_center">Название по центру</string>
     <string name="settings_title_center_summary">Использует центрирование заголовка для плеера</string>

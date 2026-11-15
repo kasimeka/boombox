@@ -192,7 +192,6 @@ class FlowReader(
     val artistListFlow: Flow<List<Artist>> = readerFlow.map { it.artistList!! }
     val genreListFlow: Flow<List<Genre>> = readerFlow.map { it.genreList!! }
     val dateListFlow: Flow<List<Date>> = readerFlow.map { it.dateList!! }
-    val folderStructureFlow: Flow<FileNode> = readerFlow.map { it.folderStructure!! }
     val shallowFolderFlow: Flow<FileNode> = readerFlow.map { it.shallowFolder!! }
     val foldersFlow: Flow<Set<String>> = readerFlow.map { it.folders!! }
     val foldersForWhitelistFlow: Flow<Set<String>> = readerFlow.map { it.foldersForWhitelist!! }

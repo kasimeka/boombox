@@ -109,8 +109,7 @@ class ViewPager2Adapter(
             Artists(R.id.artists, R.string.category_artists),
             Genres(R.id.genres, R.string.category_genres),
             Dates(R.id.dates, R.string.category_dates),
-            Folders(R.id.folders, R.string.folders),
-            FileSystem(R.id.detailed_folders, R.string.filesystem)
+            Folders(R.id.folders, R.string.folders)
         }
 
         fun mapSettingToTabList(setting: String): List<Tab?> {

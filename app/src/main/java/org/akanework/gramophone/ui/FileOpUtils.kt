@@ -61,12 +61,8 @@ fun getAdapterType(adapter: AdapterFragment.BaseInterface<*>) =
             LibraryAdapterTypes.ARTIST_ALBUMS
         }
 
-        adapter is DetailedFolderAdapter && !adapter.isDetailed -> {
+        adapter is DetailedFolderAdapter -> {
             LibraryAdapterTypes.FOLDERS_SHALLOW
-        }
-
-        adapter is DetailedFolderAdapter && adapter.isDetailed -> {
-            LibraryAdapterTypes.FOLDERS_DETAILED
         }
 
         adapter is SongAdapter && adapter.isSubFragment == R.id.songs -> {
