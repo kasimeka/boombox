@@ -221,8 +221,9 @@ class GeneralSubFragment : BaseFragment() {
 
             R.id.playlist_file -> {
                 val file = File(bundle.getString("Path")!!)
-                title = flowOf(file.nameWithoutExtension)
-                source = flowOf(PlaylistStore.source(file, mainActivity.getString(R.string.playlist_query, file.nameWithoutExtension)))
+                val playlistTitle = mainActivity.getString(R.string.playlist_query, file.nameWithoutExtension)
+                title = flowOf(playlistTitle)
+                source = flowOf(PlaylistStore.source(file, playlistTitle))
                 itemList = flow {
                     val songsByPath = mainActivity.reader.songListFlow.first()
                         .associateBy { it.getFile()?.absolutePath }

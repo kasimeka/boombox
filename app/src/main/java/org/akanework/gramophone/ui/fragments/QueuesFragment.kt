@@ -468,7 +468,7 @@ private fun playPlaylist(activity: MainActivity, scope: CoroutineScope, file: Fi
         val controller = activity.getPlayer() ?: return@launch
         val title = activity.getString(R.string.playlist_query, file.nameWithoutExtension)
         controller.setMediaItemsWithTitle(
-            if (shuffle) songs.shuffled() else songs,
+            songs,
             title = title,
             original = !shuffle,
             source = PlaylistStore.source(file, title),
