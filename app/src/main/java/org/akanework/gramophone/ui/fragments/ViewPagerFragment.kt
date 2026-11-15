@@ -26,10 +26,12 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.provider.Settings
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
@@ -365,7 +367,28 @@ class ViewPagerFragment : BaseFragment() {
         if (tabLayoutMediator == null) attachBottomTabBar()
     }
 
+    /**
+     * Scrollable tabs always start at the left. When all tabs fit the bar, centre them as a group;
+     * when they overflow, keep the strip wrap-content so it scrolls from the start as before.
+     */
+    private val tabCenteringListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        val strip = tabLayout.getChildAt(0) as? LinearLayout ?: return@OnLayoutChangeListener
+        val contentWidth = (0 until strip.childCount).sumOf { i ->
+            val tab = strip.getChildAt(i)
+            val margins = tab.layoutParams as? ViewGroup.MarginLayoutParams
+            tab.width + (margins?.let { it.marginStart + it.marginEnd } ?: 0)
+        }
+        val fits = contentWidth in 1..tabLayout.width
+        val wantWidth = if (fits) ViewGroup.LayoutParams.MATCH_PARENT else ViewGroup.LayoutParams.WRAP_CONTENT
+        val wantGravity = if (fits) Gravity.CENTER_HORIZONTAL else Gravity.START
+        if (strip.layoutParams.width != wantWidth) {
+            strip.layoutParams = strip.layoutParams.apply { width = wantWidth }
+        }
+        strip.setGravity(wantGravity)
+    }
+
     private fun attachBottomTabBar() {
+        tabLayout.addOnLayoutChangeListener(tabCenteringListener)
         tabLayoutMediator = TabLayoutMediator(tabLayout, viewPager2) { tab, position ->
             tab.text = getString(adapter.getLabelResId(position))
             tab.view.post {
@@ -393,6 +416,7 @@ class ViewPagerFragment : BaseFragment() {
         tabLayoutMediator?.detach()
         tabLayoutMediator = null
         tabLayout.removeOnTabSelectedListener(tabSelectedListener)
+        tabLayout.removeOnLayoutChangeListener(tabCenteringListener)
         (requireActivity() as MainActivity).playerBottomSheet.setBottomTabBarAvailable(false, false)
     }
 
