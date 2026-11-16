@@ -19,6 +19,8 @@ package org.akanework.gramophone.logic.ui
 
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
@@ -50,6 +52,8 @@ open class BaseActivity : AppCompatActivity() {
             Configuration.UI_MODE_NIGHT_YES
         ) {
             setTheme(R.style.Theme_Gramophone_PureDark)
+            // The transparent system bars show the window behind them, so it has to be black too.
+            window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
         }
         prefs.registerOnSharedPreferenceChangeListener(listener)
         super.onCreate(savedInstanceState)
