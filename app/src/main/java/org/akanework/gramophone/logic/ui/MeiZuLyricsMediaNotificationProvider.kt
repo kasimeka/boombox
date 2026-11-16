@@ -17,7 +17,9 @@
 
 package org.akanework.gramophone.logic.ui
 
+import android.app.Notification
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.media3.session.CommandButton
@@ -67,7 +69,7 @@ private class InnerMeiZuLyricsMediaNotificationProvider(
 }
 
 class MeiZuLyricsMediaNotificationProvider(
-    context: MediaSessionService,
+    private val context: MediaSessionService,
     private val tickerProvider: () -> CharSequence?
 ) : MediaNotification.Provider {
     private val inner = InnerMeiZuLyricsMediaNotificationProvider(context, tickerProvider).apply {
@@ -84,11 +86,11 @@ class MeiZuLyricsMediaNotificationProvider(
         return inner.createNotification(
             mediaSession, customLayout, actionFactory
         ) {
-            onNotificationChangedCallback.onNotificationChanged(it.also {
+            onNotificationChangedCallback.onNotificationChanged(it.withoutBadgeWithoutArtwork().also {
                 if (ticker != null)
                     it.applyNotificationFlags(true, false)
             })
-        }.also {
+        }.withoutBadgeWithoutArtwork().also {
             if (ticker != null || isManualNotificationUpdate)
                 it.applyNotificationFlags(ticker != null, isManualNotificationUpdate)
         }
@@ -101,6 +103,18 @@ class MeiZuLyricsMediaNotificationProvider(
     ) = inner.handleCustomCommand(session, action, extras)
 
     override fun getNotificationChannelInfo() = inner.notificationChannelInfo
+
+    /**
+     * With no artwork loaded, the system shows the app icon in the large slot and the small icon as a
+     * badge over it. Hide the badge there, and keep it once artwork is set.
+     */
+    private fun MediaNotification.withoutBadgeWithoutArtwork(): MediaNotification {
+        if (notification.largeIcon != null || Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return this
+        val rebuilt = Notification.Builder.recoverBuilder(context, notification)
+            .setBadgeIconType(Notification.BADGE_ICON_NONE)
+            .build()
+        return MediaNotification(notificationId, rebuilt)
+    }
 
     private fun MediaNotification.applyNotificationFlags(
         alwaysShowTicker: Boolean,
