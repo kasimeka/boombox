@@ -417,7 +417,7 @@
     <!-- Toast when a queue could not be saved as a playlist -->
     <string name="playlist_not_saved">Could not save playlist</string>
     <!-- Experiments screen: the playlists experiment switch -->
-    <string name="experiment_playlists">Playlist support</string>
+    <string name="experiment_playlists">Playlist UI</string>
     <string name="experiment_playlists_summary">Save queues as immutable playlists, automatically load playlists from the filesystem.</string>
     <!-- Shown above the playlists divider while a queue is dragged over it -->
     <string name="release_to_save_playlist">Release to save as playlist</string>
