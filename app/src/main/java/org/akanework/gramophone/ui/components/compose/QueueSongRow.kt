@@ -47,7 +47,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import kotlin.math.abs
+import org.akanework.gramophone.logic.ui.SwipeRules
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -321,10 +321,6 @@ fun QueueSongRow(
     }
 }
 
-private const val SWIPE_REMOVE_FRACTION = 0.3f
-private const val SWIPE_FLING_DP_PER_SEC = 800
-private const val SWIPE_SETTLE_MS = 180
-
 /**
  * Swipes the row left to remove it, the way ItemTouchHelper does: the list keeps any gesture it
  * has started scrolling, and a swipe only begins on a leftward drag that is clearly more
@@ -352,7 +348,7 @@ private fun Modifier.swipeToRemove(
                     if (change.isConsumed) return@awaitEachGesture
                     travelled += change.positionChange()
                     if (travelled.getDistance() < viewConfiguration.touchSlop) continue
-                    claimed = travelled.x < 0 && abs(travelled.x) > 2 * abs(travelled.y)
+                    claimed = travelled.x < 0 && SwipeRules.isHorizontal(travelled.x, travelled.y)
                     if (!claimed) return@awaitEachGesture
                 }
                 val dx = change.positionChange().x
@@ -362,13 +358,16 @@ private fun Modifier.swipeToRemove(
             }
             if (!claimed) return@awaitEachGesture
             val width = size.width.toFloat()
-            val flung = velocity.calculateVelocity().x < -SWIPE_FLING_DP_PER_SEC.dp.toPx()
+            val flingPx = SwipeRules.FLING_DP_PER_SEC.dp.toPx()
+            val committed = SwipeRules.isCommitted(
+                -offset.value, width, -velocity.calculateVelocity().x, flingPx
+            )
             launch {
-                if (offset.value < -width * SWIPE_REMOVE_FRACTION || flung) {
-                    offset.animateTo(-width, tween(SWIPE_SETTLE_MS))
+                if (committed) {
+                    offset.animateTo(-width, tween(SwipeRules.SETTLE_MS.toInt()))
                     onRemove()
                 } else {
-                    offset.animateTo(0f, tween(SWIPE_SETTLE_MS))
+                    offset.animateTo(0f, tween(SwipeRules.SETTLE_MS.toInt()))
                 }
             }
         }

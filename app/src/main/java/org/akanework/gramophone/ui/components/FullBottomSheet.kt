@@ -117,6 +117,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.akanework.gramophone.R
+import org.akanework.gramophone.experiments.trackswipe.TrackSwipe
 import org.akanework.gramophone.logic.GramophonePlaybackService
 import org.akanework.gramophone.logic.clone
 import org.akanework.gramophone.logic.dpToPx
@@ -264,6 +265,11 @@ class FullBottomSheet
             }
         }
     private val bottomSheetFullCover: ImageView
+    // Only in the portrait layout; landscape has no room beside the cover, so it has no neighbours.
+    private val bottomSheetFullCoverPrev: MaterialCardView?
+    private val bottomSheetFullCoverPrevImage: ImageView?
+    private val bottomSheetFullCoverNext: MaterialCardView?
+    private val bottomSheetFullCoverNextImage: ImageView?
     private val bottomSheetFullTitle: TextView
     private val bottomSheetFullSubtitle: TextView
     private val bottomSheetFullControllerButton: MaterialButton
@@ -289,6 +295,10 @@ class FullBottomSheet
         inflate(context, R.layout.full_player, this)
         bottomSheetFullCoverFrame = findViewById(R.id.album_cover_frame)
         bottomSheetFullCover = findViewById(R.id.full_sheet_cover)
+        bottomSheetFullCoverPrev = findViewById(R.id.full_sheet_cover_prev)
+        bottomSheetFullCoverPrevImage = findViewById(R.id.full_sheet_cover_prev_image)
+        bottomSheetFullCoverNext = findViewById(R.id.full_sheet_cover_next)
+        bottomSheetFullCoverNextImage = findViewById(R.id.full_sheet_cover_next_image)
         bottomSheetFullTitle = findViewById(R.id.full_song_name)
         bottomSheetFullSubtitle = findViewById(R.id.full_song_artist)
         bottomSheetFullPreviousButton = findViewById(R.id.sheet_previous_song)
@@ -678,6 +688,33 @@ class FullBottomSheet
             firstTime = false
         }
     }
+
+    private val trackSwipe = TrackSwipe(
+        context,
+        bottomSheetFullCoverFrame,
+        bottomSheetFullCoverPrev?.let { prev -> bottomSheetFullCoverNext?.let { prev to it } },
+        listOf(bottomSheetFullSeekBar, bottomSheetFullSlider),
+    ) { next ->
+        // The neighbour cover is already loaded, so the new track shows its art straight away.
+        bottomSheetFullCover.setImageDrawable(
+            (if (next) bottomSheetFullCoverNextImage else bottomSheetFullCoverPrevImage)?.drawable
+        )
+        if (next) instance?.seekToNext() else instance?.seekToPrevious()
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent) = trackSwipe.detect(ev, parent)
+
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        if (!trackSwipe.claimed && !trackSwipe.detect(ev, parent)) {
+            // No child took this touch, so it lands here. Keep it, or Android stops sending the
+            // rest of the gesture and a swipe from empty space never starts.
+            return super.onTouchEvent(ev) || trackSwipe.tracking
+        }
+        trackSwipe.touch(ev)
+        return true
+    }
+
+    override fun performClick(): Boolean = super.performClick()
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -1506,6 +1543,7 @@ class FullBottomSheet
                 scale(Scale.FILL)
                 error(R.drawable.ic_default_cover)
             }
+            loadNeighbourCovers()
             if (DynamicColors.isDynamicColorAvailable() &&
                 prefs.getBooleanStrict("content_based_color", true)
             ) {
@@ -1545,6 +1583,22 @@ class FullBottomSheet
 
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
         refreshShuffleEnabled()
+        loadNeighbourCovers()
+    }
+
+    /** Keeps the previous and next covers loaded, so a swipe or peek shows their art at once. */
+    private fun loadNeighbourCovers() {
+        val player = instance ?: return
+        fun artwork(index: Int) =
+            if (index == C.INDEX_UNSET) null else player.getMediaItemAt(index).mediaMetadata.artworkUri
+        bottomSheetFullCoverPrevImage?.loadNoPlaceholder(artwork(player.previousMediaItemIndex)) {
+            scale(Scale.FILL)
+            error(R.drawable.ic_default_cover)
+        }
+        bottomSheetFullCoverNextImage?.loadNoPlaceholder(artwork(player.nextMediaItemIndex)) {
+            scale(Scale.FILL)
+            error(R.drawable.ic_default_cover)
+        }
     }
 
     private fun updateDuration() {

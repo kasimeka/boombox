@@ -23,9 +23,15 @@ import androidx.preference.PreferenceManager
 /** Experimental features, off until switched on in Settings > Experiments. */
 object Experiments {
     const val PLAYLISTS = "exp_playlists"
+    const val TRACK_SWIPE = "exp_track_swipe"
 
     fun playlists(context: Context): Boolean {
         return PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
             .getBoolean(PLAYLISTS, false)
+    }
+
+    fun trackSwipe(context: Context): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+            .getBoolean(TRACK_SWIPE, false)
     }
 }

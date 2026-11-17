@@ -27,6 +27,15 @@
         android:widgetLayout="@layout/preference_switch_widget"
         app:iconSpaceReserved="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="exp_track_swipe"
+        android:layout="@layout/preference_switch"
+        android:summary="@string/experiment_track_swipe_summary"
+        android:title="@string/experiment_track_swipe"
+        android:widgetLayout="@layout/preference_switch_widget"
+        app:iconSpaceReserved="false" />
+
     <Preference
         android:key="no_experiments"
         android:layout="@layout/preference_basic"
