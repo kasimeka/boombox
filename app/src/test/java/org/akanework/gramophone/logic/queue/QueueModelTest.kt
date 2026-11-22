@@ -40,7 +40,6 @@ class QueueModelTest {
         assertNull(queue.lastPlayedAt)
         assertFalse(queue.hasBeenPlayed)
         assertEquals(QueueBookmark(), queue.bookmark)
-        assertEquals(QueueRepeatMode.OFF, queue.repeatMode)
     }
 
     @Test
@@ -60,7 +59,6 @@ class QueueModelTest {
             now = 1_000L,
         ).copy(
             bookmark = QueueBookmark(row = 1, positionMs = 5_000L),
-            repeatMode = QueueRepeatMode.ALL,
             lastPlayedAt = 1_500L,
         )
 
@@ -71,7 +69,6 @@ class QueueModelTest {
         assertEquals(original.source, renamed.source)
         assertEquals(original.rows, renamed.rows)
         assertEquals(original.bookmark, renamed.bookmark)
-        assertEquals(original.repeatMode, renamed.repeatMode)
         assertEquals(1_000L, renamed.createdAt)
         assertEquals(2_000L, renamed.updatedAt)
         assertEquals(1_500L, renamed.lastPlayedAt)
@@ -112,7 +109,6 @@ class QueueModelTest {
             now = 1L,
         ).copy(
             bookmark = QueueBookmark(row = 1, positionMs = 5_000L),
-            repeatMode = QueueRepeatMode.ALL,
         )
 
         val appended = queue.withAppendedRows(listOf("c"))
@@ -120,7 +116,6 @@ class QueueModelTest {
         assertEquals(queue.id, appended.id)
         assertEquals(listOf("a", "b", "c"), appended.rows)
         assertEquals(queue.bookmark, appended.bookmark)
-        assertEquals(queue.repeatMode, appended.repeatMode)
         assertEquals(queue.createdAt, appended.createdAt)
     }
 

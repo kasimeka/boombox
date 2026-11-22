@@ -86,7 +86,6 @@ class SqliteQueueRepositoryTest : QueueRepositoryContractTest() {
             first.mutate(created.id, now = 20L) {
                 it.reordered(listOf(2, 0, 1), now = 20L).copy(
                     bookmark = QueueBookmark(row = 1, positionMs = 4_200L),
-                    repeatMode = QueueRepeatMode.ALL,
                 )
             }
             first.mutate(created.id, now = 25L) { it.copy(lastPlayedAt = 21L) }
@@ -104,7 +103,6 @@ class SqliteQueueRepositoryTest : QueueRepositoryContractTest() {
 
             assertEquals(listOf("row-c", "row-a", "row-b"), restored?.rows)
             assertEquals(QueueBookmark(row = 1, positionMs = 4_200L), restored?.bookmark)
-            assertEquals(QueueRepeatMode.ALL, restored?.repeatMode)
             assertEquals(created.id, second.lastActiveQueue.first()?.id)
             assertEquals("new queue #2", second.create(source = null, now = 30L).title)
             secondDatabase.close()

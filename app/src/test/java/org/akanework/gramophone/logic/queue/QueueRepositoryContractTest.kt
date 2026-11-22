@@ -63,7 +63,6 @@ abstract class QueueRepositoryContractTest {
         assertEquals(source, stored?.source)
         assertEquals(listOf("row-a", "row-b", "row-c"), stored?.rows)
         assertEquals(QueueBookmark(), stored?.bookmark)
-        assertEquals(QueueRepeatMode.OFF, stored?.repeatMode)
         assertEquals(100L, stored?.createdAt)
         assertEquals(100L, stored?.updatedAt)
         assertNull(stored?.lastPlayedAt)
@@ -74,7 +73,6 @@ abstract class QueueRepositoryContractTest {
     fun replayingASourceAlwaysCreatesANewCompleteQueue() = runBlocking {
         val source = QueueSource(QueueSourceKind.ALBUM, "album-1", "Abbey Road")
         val first = repository.create(source, listOf("a", "b", "c"), now = 100L)
-        repository.mutate(first.id, now = 150L) { it.copy(repeatMode = QueueRepeatMode.ALL) }
 
         val second = repository.create(source, listOf("a", "b", "c"), now = 200L)
 
@@ -84,7 +82,6 @@ abstract class QueueRepositoryContractTest {
         assertEquals(listOf("a", "b", "c"), second.rows)
         val storedFirst = repository.queue(first.id).first()
         assertEquals(listOf("a", "b", "c"), storedFirst?.rows)
-        assertEquals(QueueRepeatMode.ALL, storedFirst?.repeatMode)
     }
 
     @Test
@@ -201,7 +198,6 @@ abstract class QueueRepositoryContractTest {
         repository.mutate(queue.id, now = 20L) {
             it.copy(
                 bookmark = QueueBookmark(row = 1, positionMs = 5_000L, ended = false),
-                repeatMode = QueueRepeatMode.ONE,
                 lastPlayedAt = 15L,
             )
         }
@@ -214,7 +210,6 @@ abstract class QueueRepositoryContractTest {
         assertEquals(queue.source, stored?.source)
         assertEquals(listOf("a", "b", "c"), stored?.rows)
         assertEquals(QueueBookmark(1, 5_000L), stored?.bookmark)
-        assertEquals(QueueRepeatMode.ONE, stored?.repeatMode)
         assertEquals(10L, stored?.createdAt)
         assertEquals(15L, stored?.lastPlayedAt)
         assertEquals(30L, stored?.updatedAt)
@@ -258,13 +253,11 @@ abstract class QueueRepositoryContractTest {
         repository.mutate(first.id, now = 3L) {
             it.copy(
                 bookmark = QueueBookmark(row = 1, positionMs = 8_000L, ended = true),
-                repeatMode = QueueRepeatMode.ALL,
             )
         }
 
         val untouched = repository.queue(second.id).first()
         assertEquals(QueueBookmark(), untouched?.bookmark)
-        assertEquals(QueueRepeatMode.OFF, untouched?.repeatMode)
         assertEquals(
             QueueBookmark(1, 8_000L, ended = true),
             repository.queue(first.id).first()?.bookmark,
@@ -294,18 +287,16 @@ abstract class QueueRepositoryContractTest {
     }
 
     @Test
-    fun savingProgressUpdatesBookmarkAndRepeatWithoutTouchingTheEditTimestamp() = runBlocking {
+    fun savingProgressUpdatesBookmarkWithoutTouchingTheEditTimestamp() = runBlocking {
         val queue = repository.create(source = null, rows = listOf("a", "b", "c"), now = 10L)
 
         val changed = repository.saveProgress(
             queue.id,
             QueueBookmark(row = 2, positionMs = 7_000L, ended = true),
-            QueueRepeatMode.ALL,
         )
         val stored = repository.queue(queue.id).first()
 
         assertEquals(QueueBookmark(2, 7_000L, ended = true), changed?.bookmark)
-        assertEquals(QueueRepeatMode.ALL, changed?.repeatMode)
         assertEquals(10L, stored?.updatedAt)
         assertEquals(changed, stored)
     }
@@ -408,8 +399,6 @@ abstract class QueueRepositoryContractTest {
     fun singleQueueFlowReflectsMutationsAndDeletion() = runBlocking {
         val queue = repository.create(source = null, rows = listOf("a"), now = 1L)
 
-        repository.mutate(queue.id, now = 2L) { it.copy(repeatMode = QueueRepeatMode.ALL) }
-        assertEquals(QueueRepeatMode.ALL, repository.queue(queue.id).first()?.repeatMode)
 
         repository.delete(queue.id)
         assertNull(repository.queue(queue.id).first())

@@ -81,7 +81,6 @@ class ActiveQueuePersistenceTest {
 
         assertEquals(rows("a", "b"), saved.rows)
         assertEquals(QueueBookmark(row = 1, positionMs = 42_000L), saved.bookmark)
-        assertEquals(QueueRepeatMode.ALL, saved.repeatMode)
         assertEquals(created.id, repository.lastActiveQueue.value?.id)
     }
 
@@ -209,7 +208,6 @@ class ActiveQueuePersistenceTest {
         assertNull(saved)
         val stored = repository.queue(incoming.id).first()!!
         assertEquals(incoming.bookmark, stored.bookmark)
-        assertEquals(incoming.repeatMode, stored.repeatMode)
         assertEquals(outgoing.bookmark, repository.queue(outgoing.id).first()!!.bookmark)
     }
 
