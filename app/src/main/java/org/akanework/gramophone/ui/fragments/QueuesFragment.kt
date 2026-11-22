@@ -1316,12 +1316,20 @@ private fun QueueDetailScreen(
             val edgeThresholdPx = with(LocalDensity.current) { 56.dp.toPx() }
             val latestDisplayRows by androidx.compose.runtime.rememberUpdatedState(displayRows)
 
-            fun onDragDelta(deltaY: Float, isScrollCompensation: Boolean = false) {
+            fun onDragDelta(rawDeltaY: Float, isScrollCompensation: Boolean = false) {
                 val key = dragState.draggingKey ?: return
                 val currentRows = latestDisplayRows
                 val currentIndex = currentRows.indexOfFirst { it.key == key }
                 if (currentIndex < 0) return
 
+                val deltaY = if (isScrollCompensation) rawDeltaY else {
+                    val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }
+                    if (info == null) rawDeltaY else QueueDragReorder.boundedDragDelta(
+                        deltaY = rawDeltaY,
+                        dragTop = info.offset + dragState.dragOffset,
+                        viewportStart = listState.layoutInfo.viewportStartOffset.toFloat(),
+                    )
+                }
                 val step = QueueDragReorder.onDragDelta(
                     state = QueueDragReorder.State(
                         items = currentRows,

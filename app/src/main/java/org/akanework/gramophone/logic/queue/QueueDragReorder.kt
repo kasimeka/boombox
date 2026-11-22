@@ -29,6 +29,13 @@ package org.akanework.gramophone.logic.queue
  */
 object QueueDragReorder {
 
+    /**
+     * Limits an upward drag step so the dragged row stops at [viewportStart] instead of passing it.
+     * Compose cancels the drag once the row leaves the list, and the edge auto-scroll takes over first.
+     */
+    fun boundedDragDelta(deltaY: Float, dragTop: Float, viewportStart: Float): Float =
+        if (deltaY < 0f) maxOf(deltaY, viewportStart - dragTop) else deltaY
+
     data class State<T>(
         val items: List<T>,
         val currentIndex: Int,

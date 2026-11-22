@@ -35,6 +35,27 @@ class QueueDragReorderTest {
     private val initialItems = listOf("A", "B", "C", "D")
 
     @Test
+    fun dragUpStopsAtTheTopOfTheViewport() {
+        // The row may reach the top edge but not pass it, or Compose cancels the drag.
+        assertEquals(-10f, QueueDragReorder.boundedDragDelta(deltaY = -30f, dragTop = 10f, viewportStart = 0f), 0.001f)
+    }
+
+    @Test
+    fun dragUpAtTheTopEdgeDoesNotMove() {
+        assertEquals(0f, QueueDragReorder.boundedDragDelta(deltaY = -5f, dragTop = 0f, viewportStart = 0f), 0.001f)
+    }
+
+    @Test
+    fun dragUpWellInsideTheViewportIsUnchanged() {
+        assertEquals(-30f, QueueDragReorder.boundedDragDelta(deltaY = -30f, dragTop = 100f, viewportStart = 0f), 0.001f)
+    }
+
+    @Test
+    fun dragDownIsNeverBounded() {
+        assertEquals(20f, QueueDragReorder.boundedDragDelta(deltaY = 20f, dragTop = 10f, viewportStart = 0f), 0.001f)
+    }
+
+    @Test
     fun smallDeltaBelowThresholdDoesNotSwap() {
         val initial = QueueDragReorder.State(
             items = initialItems,
