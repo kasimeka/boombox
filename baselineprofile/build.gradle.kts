@@ -11,7 +11,7 @@ plugins {
 
 android {
 	namespace = "org.nift4.baselineprofile"
-	compileSdk = 36
+	compileSdk = 37
 
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_21
