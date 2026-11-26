@@ -118,6 +118,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
@@ -668,6 +669,8 @@ private class QueueDragState {
     var dragStartIndex by mutableStateOf<Int?>(null)
     var dragStartRows by mutableStateOf<List<String>>(emptyList())
     var dragOffset by mutableFloatStateOf(0f)
+    var pointerY by mutableFloatStateOf(0f)
+    var grabOffsetY by mutableFloatStateOf(0f)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1314,74 +1317,86 @@ private fun QueueDetailScreen(
         } else {
             val rowHeightPx = with(LocalDensity.current) { 72.dp.toPx() }
             val edgeThresholdPx = with(LocalDensity.current) { 56.dp.toPx() }
+            val handleWidthPx = with(LocalDensity.current) { 48.dp.toPx() }
             val latestDisplayRows by androidx.compose.runtime.rememberUpdatedState(displayRows)
+            val latestSearchQuery by androidx.compose.runtime.rememberUpdatedState(searchQuery)
 
-            fun onDragDelta(rawDeltaY: Float, isScrollCompensation: Boolean = false) {
+            fun syncDragPosition() {
                 val key = dragState.draggingKey ?: return
                 val currentRows = latestDisplayRows
                 val currentIndex = currentRows.indexOfFirst { it.key == key }
                 if (currentIndex < 0) return
+                val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
+                val desiredTop = dragState.pointerY - dragState.grabOffsetY
+                val currentTranslation = desiredTop - info.offset
 
-                val deltaY = if (isScrollCompensation) rawDeltaY else {
-                    val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }
-                    if (info == null) rawDeltaY else QueueDragReorder.boundedDragDelta(
-                        deltaY = rawDeltaY,
-                        dragTop = info.offset + dragState.dragOffset,
-                        viewportStart = listState.layoutInfo.viewportStartOffset.toFloat(),
-                    )
-                }
                 val step = QueueDragReorder.onDragDelta(
                     state = QueueDragReorder.State(
                         items = currentRows,
                         currentIndex = currentIndex,
-                        dragOffset = dragState.dragOffset,
+                        dragOffset = currentTranslation,
                     ),
-                    deltaY = deltaY,
+                    deltaY = 0f,
                     rowHeightPx = rowHeightPx,
-                    isScrollCompensation = isScrollCompensation,
+                    isScrollCompensation = true,
                     firstVisibleItemIndex = (listState.firstVisibleItemIndex - 1).coerceAtLeast(0),
                     firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset,
                 )
 
                 dragState.dragOffset = step.state.dragOffset
                 if (step.swapped) {
+                    val anchorIndex = listState.firstVisibleItemIndex
+                    val anchorOffset = listState.firstVisibleItemScrollOffset
                     displayRows = step.state.items
-                    if (step.requiresScrollAnchorReset) {
-                        scope.launch {
-                            listState.scrollToItem(0, 0)
-                        }
-                    }
+                    listState.requestScrollToItem(anchorIndex, anchorOffset)
                 }
+            }
+
+            fun finishDrag() {
+                val key = dragState.draggingKey
+                val startIndex = dragState.dragStartIndex
+                val previousRows = dragState.dragStartRows
+                dragState.draggingKey = null
+                dragState.dragStartIndex = null
+                dragState.dragStartRows = emptyList()
+                dragState.dragOffset = 0f
+                if (key == null || startIndex == null) return
+                val finalRows = latestDisplayRows
+                val to = finalRows.indexOfFirst { it.key == key }
+                if (to < 0 || to == startIndex) return
+                // Commit reorder once on drop. No post-drop snap/scroll compensation: the
+                // dragged item was reordered incrementally and is already at its drop slot.
+                moveRow(startIndex, to, finalRows.map { it.encoded }, previousRows)
+            }
+
+            fun cancelDrag() {
+                dragState.draggingKey = null
+                dragState.dragStartIndex = null
+                dragState.dragStartRows = emptyList()
+                dragState.dragOffset = 0f
             }
 
             // Incremental in-drag reordering with edge auto-scroll.
             LaunchedEffect(dragState.draggingKey) {
                 if (dragState.draggingKey == null) return@LaunchedEffect
                 while (dragState.draggingKey != null) {
-                    val key = dragState.draggingKey ?: break
-                    val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }
-                    if (info != null) {
-                        val viewportStart = listState.layoutInfo.viewportStartOffset
-                        val viewportEnd = listState.layoutInfo.viewportEndOffset
-                        val draggedTop = info.offset + dragState.dragOffset
-                        val draggedBottom = draggedTop + info.size
-                        val delta = when {
-                            draggedTop < viewportStart + edgeThresholdPx ->
-                                (draggedTop - (viewportStart + edgeThresholdPx)) * 0.2f
-                            draggedBottom > viewportEnd - edgeThresholdPx ->
-                                (draggedBottom - (viewportEnd - edgeThresholdPx)) * 0.2f
-                            else -> 0f
-                        }
-                        if (delta != 0f &&
-                            ((delta < 0f && listState.canScrollBackward) ||
-                                (delta > 0f && listState.canScrollForward))
-                        ) {
-                            val consumed = listState.scrollBy(delta)
-                            if (consumed != 0f) {
-                                // List content scrolled by `consumed`. Compensate visual translation so the
-                                // dragged item remains fixed under the finger.
-                                onDragDelta(consumed, isScrollCompensation = true)
-                            }
+                    val viewportStart = listState.layoutInfo.viewportStartOffset.toFloat()
+                    val viewportEnd = listState.layoutInfo.viewportEndOffset.toFloat()
+                    val y = dragState.pointerY
+                    val delta = when {
+                        y < viewportStart + edgeThresholdPx ->
+                            (y - (viewportStart + edgeThresholdPx)) * 0.2f
+                        y > viewportEnd - edgeThresholdPx ->
+                            (y - (viewportEnd - edgeThresholdPx)) * 0.2f
+                        else -> 0f
+                    }
+                    if (delta != 0f &&
+                        ((delta < 0f && listState.canScrollBackward) ||
+                            (delta > 0f && listState.canScrollForward))
+                    ) {
+                        val consumed = listState.scrollBy(delta)
+                        if (consumed != 0f) {
+                            syncDragPosition()
                         }
                     }
                     kotlinx.coroutines.delay(16L)
@@ -1396,7 +1411,92 @@ private fun QueueDetailScreen(
                         end = padding.calculateRightPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
                         bottom = padding.calculateBottomPadding() + bottomPaddingDp,
                     ),
-                    modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = padding.calculateTopPadding())
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(
+                                    requireUnconsumed = false,
+                                    pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                                )
+                                // Reordering needs the full queue in view; a filtered list cannot be dragged.
+                                if (latestSearchQuery.isNotBlank()) return@awaitEachGesture
+                                val item = listState.layoutInfo.visibleItemsInfo.firstOrNull {
+                                    it.key is Long &&
+                                        down.position.y >= it.offset &&
+                                        down.position.y <= it.offset + it.size
+                                } ?: return@awaitEachGesture
+                                val rowKey = item.key as Long
+                                val onHandle = down.position.x >= size.width - handleWidthPx
+                                val slop = viewConfiguration.touchSlop
+                                var startY = down.position.y
+                                var started = false
+
+                                if (onHandle) {
+                                    while (true) {
+                                        val event = awaitPointerEvent(
+                                            androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                                        )
+                                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                        if (!change.pressed) break
+                                        if ((change.position - down.position).getDistance() >= slop) {
+                                            change.consume()
+                                            startY = change.position.y
+                                            started = true
+                                            break
+                                        }
+                                    }
+                                } else {
+                                    val movedOrUp = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                        while (true) {
+                                            val event = awaitPointerEvent(
+                                                androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                                            )
+                                            val change = event.changes.firstOrNull { it.id == down.id }
+                                                ?: return@withTimeoutOrNull true
+                                            if (!change.pressed) return@withTimeoutOrNull true
+                                            if ((change.position - down.position).getDistance() >= slop) {
+                                                return@withTimeoutOrNull true
+                                            }
+                                        }
+                                    }
+                                    if (movedOrUp == null) {
+                                        started = true
+                                    }
+                                }
+
+                                if (!started) return@awaitEachGesture
+                                val currentRows = latestDisplayRows
+                                val index = currentRows.indexOfFirst { it.key == rowKey }
+                                if (index < 0) return@awaitEachGesture
+                                dragState.draggingKey = rowKey
+                                dragState.dragStartIndex = index
+                                dragState.dragStartRows = currentRows.map { it.encoded }
+                                dragState.dragOffset = 0f
+                                dragState.pointerY = startY
+                                dragState.grabOffsetY = down.position.y - item.offset
+
+                                try {
+                                    while (true) {
+                                        val event = awaitPointerEvent(
+                                            androidx.compose.ui.input.pointer.PointerEventPass.Initial,
+                                        )
+                                        val change = event.changes.firstOrNull { it.id == down.id }
+                                        if (change == null || !change.pressed) {
+                                            finishDrag()
+                                            break
+                                        }
+                                        dragState.pointerY = change.position.y
+                                        change.consume()
+                                        syncDragPosition()
+                                    }
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    cancelDrag()
+                                    throw e
+                                }
+                            }
+                        },
                 ) {
                     item(key = "queue_decor_panel") {
                         QueueDetailDecorPanel(
@@ -1427,8 +1527,15 @@ private fun QueueDetailScreen(
                         QueueSongRow(
                             item = decoded,
                             isDragging = isDragging,
-                            dragTranslation = if (isDragging) dragState.dragOffset else 0f,
-                            modifier = if (isDragging) Modifier else Modifier.animateItem(),
+                            dragTranslation = {
+                                if (!isDragging) 0f else {
+                                    val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == row.key }
+                                    if (info != null) (dragState.pointerY - dragState.grabOffsetY) - info.offset
+                                    else dragState.dragOffset
+                                }
+                            },
+                            modifier = (if (isDragging) Modifier else Modifier.animateItem())
+                                .zIndex(if (isDragging) 1f else 0f),
                             isCurrent = isActive && currentPlayingKey == row.key,
                             isPlaying = isActive && playerState.isPlaying,
                             canPlayNext = QueuePlaybackRules.playNextAvailable(activeQueue),
@@ -1457,40 +1564,6 @@ private fun QueueDetailScreen(
                             onShare = { decoded?.let(::shareItem) },
                             onDelete = { decoded?.let(::deleteItem) },
                             onRemoveFromQueue = { removeRow(index) },
-                            onDrag = { amount ->
-                                onDragDelta(amount)
-                            },
-                            onDragEnd = {
-                                val key = dragState.draggingKey
-                                val startIndex = dragState.dragStartIndex
-                                val previousRows = dragState.dragStartRows
-                                dragState.draggingKey = null
-                                dragState.dragStartIndex = null
-                                dragState.dragStartRows = emptyList()
-                                dragState.dragOffset = 0f
-                                if (key == null || startIndex == null) return@QueueSongRow
-                                val finalRows = latestDisplayRows
-                                val to = finalRows.indexOfFirst { it.key == key }
-                                if (to < 0 || to == startIndex) return@QueueSongRow
-                                // Commit reorder once on drop. No post-drop snap/scroll compensation: the
-                                // dragged item was reordered incrementally and is already at its drop slot.
-                                moveRow(startIndex, to, finalRows.map { it.encoded }, previousRows)
-                            },
-                            onDragCancel = {
-                                dragState.draggingKey = null
-                                dragState.dragStartIndex = null
-                                dragState.dragStartRows = emptyList()
-                                dragState.dragOffset = 0f
-                            },
-                            onDragStart = {
-                                // Reordering needs the full queue in view; a filtered list cannot be dragged.
-                                if (searchQuery.isNotBlank()) return@QueueSongRow
-                                val index = displayRows.indexOfFirst { it.key == row.key }
-                                dragState.draggingKey = row.key
-                                dragState.dragStartIndex = index.takeIf { it >= 0 }
-                                dragState.dragStartRows = displayRows.map { it.encoded }
-                                dragState.dragOffset = 0f
-                            },
                         )
                     }
                 }

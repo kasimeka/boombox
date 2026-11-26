@@ -24,8 +24,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -100,7 +98,7 @@ private const val HIGHLIGHT_FADE_OUT_MS = 400
 fun QueueSongRow(
     item: MediaItem?,
     isDragging: Boolean,
-    dragTranslation: Float,
+    dragTranslation: () -> Float,
     isCurrent: Boolean,
     isPlaying: Boolean,
     canPlayNext: Boolean,
@@ -113,20 +111,12 @@ fun QueueSongRow(
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onRemoveFromQueue: () -> Unit,
-    onDragStart: () -> Unit,
-    onDrag: (Float) -> Unit,
-    onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit,
     highlighted: Boolean = false,
     onHighlightEnd: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
-    val currentOnDragStart by rememberUpdatedState(onDragStart)
-    val currentOnDrag by rememberUpdatedState(onDrag)
-    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
-    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     val currentOnHighlightEnd by rememberUpdatedState(onHighlightEnd)
     val currentOnRemoveFromQueue by rememberUpdatedState(onRemoveFromQueue)
     val highlightAlpha = remember { Animatable(0f) }
@@ -142,7 +132,7 @@ fun QueueSongRow(
     Box(
         modifier = modifier
             .zIndex(if (isDragging) 1f else 0f)
-            .graphicsLayer { translationY = dragTranslation }
+            .graphicsLayer { translationY = dragTranslation() }
             .fillMaxWidth()
             .height(72.dp)
             .clipToBounds(),
@@ -172,17 +162,6 @@ fun QueueSongRow(
                     offset = swipeOffset,
                     onRemove = { currentOnRemoveFromQueue() },
                 )
-                .pointerInput(Unit) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { currentOnDragStart() },
-                        onDrag = { change, amount ->
-                            change.consume()
-                            currentOnDrag(amount.y)
-                        },
-                        onDragEnd = { currentOnDragEnd() },
-                        onDragCancel = { currentOnDragCancel() },
-                    )
-                }
                 .clickable(onClick = onPlay)
                 .padding(start = 24.dp, end = 6.dp),
         ) {
@@ -304,18 +283,7 @@ fun QueueSongRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(end = 10.dp)
-                    .size(24.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = { currentOnDragStart() },
-                            onDrag = { change, amount ->
-                                change.consume()
-                                currentOnDrag(amount.y)
-                            },
-                            onDragEnd = { currentOnDragEnd() },
-                            onDragCancel = { currentOnDragCancel() },
-                        )
-                    },
+                    .size(24.dp),
             )
         }
     }
